@@ -1,16 +1,16 @@
-[gd_scene format=3 uid="uid://cbfarmscr001"]
+[gd_scene format=3 uid="uid://ci5ai34hi8brs"]
 
-[ext_resource type="Shader" path="res://assets/shaders/gradient_background.gdshader" id="1_shader"]
+[ext_resource type="Shader" uid="uid://k6yi5vnehc23" path="res://assets/shaders/gradient_background.gdshader" id="1_shader"]
 [ext_resource type="PackedScene" uid="uid://cbfarm00en01" path="res://scenes/world/Farm.tscn" id="2_farm"]
-[ext_resource type="Script" path="res://scripts/world/farm_screen.gd" id="3_script"]
+[ext_resource type="Script" uid="uid://bhqi0at2rbnby" path="res://scripts/world/farm_screen.gd" id="3_script"]
 [ext_resource type="PackedScene" uid="uid://cbhud000en01" path="res://scenes/ui/HUD.tscn" id="4_hud"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_bg"]
 shader = ExtResource("1_shader")
-shader_parameter/color_top    = Color(0.761, 0.784, 0.847, 1.0)
-shader_parameter/color_bottom = Color(0.929, 0.878, 0.800, 1.0)
+shader_parameter/color_top = Color(0.761, 0.784, 0.847, 1)
+shader_parameter/color_bottom = Color(0.929, 0.878, 0.8, 1)
 
-[node name="FarmScreen" type="Control"]
+[node name="FarmScreen" type="Control" unique_id=1713412842]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -19,18 +19,18 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("3_script")
 
-[node name="Background" type="ColorRect" parent="."]
-layout_mode = 3
+[node name="Background" type="ColorRect" parent="." unique_id=2016298716]
+material = SubResource("ShaderMaterial_bg")
+layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-material = SubResource("ShaderMaterial_bg")
 
-[node name="FarmContainer" type="SubViewportContainer" parent="."]
-layout_mode = 3
+[node name="FarmContainer" type="SubViewportContainer" parent="." unique_id=696711483]
+layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -38,16 +38,18 @@ grow_horizontal = 2
 grow_vertical = 2
 stretch = true
 
-[node name="Farm3D" type="SubViewport" parent="FarmContainer"]
+[node name="Farm3D" type="SubViewport" parent="FarmContainer" unique_id=1802287091]
 transparent_bg = true
 handle_input_locally = false
+size = Vector2i(650, 1200)
+render_target_update_mode = 4
 
-[node name="Farm" parent="FarmContainer/Farm3D" instance=ExtResource("2_farm")]
+[node name="Farm" parent="FarmContainer/Farm3D" unique_id=372172964 instance=ExtResource("2_farm")]
 
-[node name="HUDLayer" type="CanvasLayer" parent="."]
+[node name="HUDLayer" type="CanvasLayer" parent="." unique_id=507937887]
 layer = 5
 
-[node name="HUD" parent="HUDLayer" instance=ExtResource("4_hud")]
+[node name="HUD" parent="HUDLayer" unique_id=496866298 instance=ExtResource("4_hud")]
 
-[node name="UILayer" type="CanvasLayer" parent="."]
+[node name="UILayer" type="CanvasLayer" parent="." unique_id=1363381906]
 layer = 10

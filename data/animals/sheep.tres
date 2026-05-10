@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="AnimalData" format=3 uid="uid://cbanml0shp01"]
+
+[ext_resource type="Script" uid="uid://dpsb78xvwk4q3" path="res://scripts/resources/animal_data.gd" id="1_animal_data"]
+
+[resource]
+script = ExtResource("1_animal_data")
+id = "sheep"
+display_name = "Sheep"
+scene_path = "res://assets/models/animals/Sheep.obj"
+color = Color(0.9, 0.88, 0.85, 1)
+price = 80
+coin_rate = 8.0
+coin_amount = 5

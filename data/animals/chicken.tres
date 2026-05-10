@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="AnimalData" format=3 uid="uid://cbanml0chkn1"]
+
+[ext_resource type="Script" uid="uid://dpsb78xvwk4q3" path="res://scripts/resources/animal_data.gd" id="1_animal_data"]
+
+[resource]
+script = ExtResource("1_animal_data")
+id = "chicken"
+display_name = "Chicken"
+scene_path = "res://assets/models/animals/Chicken.obj"
+color = Color(0.95, 0.9, 0.7, 1)

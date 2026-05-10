@@ -1,5 +1,8 @@
 extends Control
 
+const AnimalData     = preload("res://scripts/resources/animal_data.gd")
+const AnimalRegistry = preload("res://scripts/autoloads/AnimalRegistry.gd")
+
 const LILA      := Color(0.58, 0.44, 0.78)
 const LILA_DARK := Color(0.42, 0.31, 0.60)
 const GOLD      := Color(1.00, 0.82, 0.20)
@@ -24,16 +27,7 @@ const SHOP_ITEMS: Dictionary = {
 		{"name": "moss tile",    "price":  70, "currency": "coin", "color": Color(0.42, 0.60, 0.36)},
 		{"name": "zen tile",     "price":   6, "currency": "gem",  "color": Color(0.68, 0.58, 0.80)},
 	],
-	"animals": [
-		{"name": "chicken", "price": 50, "currency": "coin", "color": Color(0.95, 0.90, 0.70),
-		 "scene": "res://assets/models/animals/chicken.obj", "scale": 0.5, "coin_rate": 5.0},
-		{"name": "fox",          "price": 200, "currency": "coin", "color": Color(0.85, 0.45, 0.15)},
-		{"name": "crane",        "price": 300, "currency": "coin", "color": Color(0.92, 0.92, 0.92)},
-		{"name": "tanuki",       "price":   6, "currency": "gem",  "color": Color(0.52, 0.38, 0.24)},
-		{"name": "cat",          "price": 250, "currency": "coin", "color": Color(0.70, 0.65, 0.60)},
-		{"name": "deer",         "price":   8, "currency": "gem",  "color": Color(0.80, 0.60, 0.42)},
-		{"name": "rabbit",       "price": 180, "currency": "coin", "color": Color(0.90, 0.85, 0.82)},
-	],
+	# animals category is loaded dynamically from AnimalRegistry
 	"seeds": [
 		{"name": "cherry blossom","price":  50, "currency": "coin", "color": Color(0.95, 0.75, 0.82)},
 		{"name": "bamboo",        "price":  35, "currency": "coin", "color": Color(0.45, 0.72, 0.38)},
@@ -134,9 +128,19 @@ func _build_grid() -> void:
 	for child in item_grid.get_children():
 		child.queue_free()
 	section_label.text = _category
-	var items: Array = SHOP_ITEMS.get(_category, [])
-	for item in items:
-		item_grid.add_child(_make_card(item))
+	if _category == "animals":
+		for animal in AnimalRegistry.get_all():
+			var item := {
+				"name":     animal.id,
+				"price":    animal.price,
+				"currency": "coin",
+				"color":    animal.color,
+			}
+			item_grid.add_child(_make_card(item))
+	else:
+		var items: Array = SHOP_ITEMS.get(_category, [])
+		for item in items:
+			item_grid.add_child(_make_card(item))
 
 
 func _make_card(item: Dictionary) -> Control:

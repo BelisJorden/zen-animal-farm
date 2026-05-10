@@ -1,16 +1,17 @@
 extends Node3D
 
+const AnimalData      = preload("res://scripts/resources/animal_data.gd")
+const AnimalRegistry  = preload("res://scripts/autoloads/AnimalRegistry.gd")
 const TAP_MAX_PIXELS  := 12.0
 const PAN_SENSITIVITY := 0.012
-const DEFAULT_ANIMAL  := {"name": "fox", "color": Color(0.85, 0.45, 0.15)}
 
 @onready var camera:       Camera3D  = $Camera3D
 @onready var grid:         Node3D    = $Grid
 @onready var animals_root: Node3D    = $Animals
 @onready var placing_ui              = $PlacingLayer/PlacingUI
 
-var _placing_mode  := false
-var _selected_animal: Dictionary = {}
+var _placing_mode     := false
+var _selected_animal: AnimalData = null
 var _ghost: MeshInstance3D = null
 
 var _drag_start  := Vector2.ZERO
@@ -39,8 +40,6 @@ func _build_world_base() -> void:
 	island.material_override = island_mat
 	island.position = Vector3(0.0, -0.25, 0.0)
 	add_child(island)
-
-
 
 
 # ── Input ──────────────────────────────────────────────────────────────────────
@@ -101,20 +100,23 @@ func _handle_tap(screen_pos: Vector2) -> void:
 
 # ── Placing mode ───────────────────────────────────────────────────────────────
 
-func _enter_placing_mode(animal_data: Dictionary) -> void:
+func _enter_placing_mode(animal_dict: Dictionary) -> void:
+	var animal: AnimalData = AnimalRegistry.get_animal(animal_dict.get("name", ""))
+	if not animal:
+		return
 	_placing_mode    = true
-	_selected_animal = animal_data
-	placing_ui.open(animal_data)
+	_selected_animal = animal
+	placing_ui.open(animal)
 	placing_ui.visible = true
 	grid.highlight_free(true)
-	_spawn_ghost(animal_data)
+	_spawn_ghost(animal)
 
 
 func _exit_placing_mode() -> void:
 	if not _placing_mode:
 		return
 	_placing_mode    = false
-	_selected_animal = {}
+	_selected_animal = null
 	placing_ui.visible = false
 	grid.clear_highlights()
 	if _ghost:
@@ -123,33 +125,32 @@ func _exit_placing_mode() -> void:
 	EventBus.placing_mode_exited.emit()
 
 
-func _on_animal_selected(animal_data: Dictionary) -> void:
-	_selected_animal = animal_data
+func _on_animal_selected(animal: AnimalData) -> void:
+	_selected_animal = animal
 	if _ghost:
 		_ghost.queue_free()
-	_spawn_ghost(animal_data)
+	_spawn_ghost(animal)
 
 
-func _spawn_ghost(data: Dictionary) -> void:
+func _spawn_ghost(animal: AnimalData) -> void:
 	_ghost = MeshInstance3D.new()
 	var mesh   := SphereMesh.new()
 	mesh.radius = 0.18
 	mesh.height = 0.36
 	_ghost.mesh = mesh
 	var mat := StandardMaterial3D.new()
-	mat.albedo_color             = data.get("color", Color.WHITE)
-	mat.albedo_color.a           = 0.50
-	mat.transparency             = BaseMaterial3D.TRANSPARENCY_ALPHA
-	_ghost.material_override     = mat
+	mat.albedo_color         = animal.color
+	mat.albedo_color.a       = 0.50
+	mat.transparency         = BaseMaterial3D.TRANSPARENCY_ALPHA
+	_ghost.material_override = mat
 	add_child(_ghost)
 	_ghost.visible = false
 
 
 func _try_place(tile) -> void:
-	if tile.is_occupied or _selected_animal.is_empty():
+	if tile.is_occupied or not _selected_animal:
 		return
-	var type_name: String = _selected_animal.get("name", "")
-	if not GameState.remove_from_inventory(type_name):
+	if not GameState.remove_from_inventory(_selected_animal.id):
 		return
 	tile.is_occupied = true
 	tile.set_highlighted(false)
@@ -158,10 +159,10 @@ func _try_place(tile) -> void:
 	_exit_placing_mode()
 
 
-func _spawn_animal(tile_pos: Vector3, data: Dictionary) -> void:
+func _spawn_animal(tile_pos: Vector3, animal: AnimalData) -> void:
 	var node: Node3D
-	if data.has("scene"):
-		var res := load(data["scene"])
+	if animal.scene_path != "":
+		var res := load(animal.scene_path)
 		if res is PackedScene:
 			node = res.instantiate()
 		else:
@@ -175,20 +176,18 @@ func _spawn_animal(tile_pos: Vector3, data: Dictionary) -> void:
 		mesh.height = 0.36
 		mesh_inst.mesh = mesh
 		var mat := StandardMaterial3D.new()
-		mat.albedo_color = data.get("color", Color.WHITE)
+		mat.albedo_color = animal.color
 		mesh_inst.material_override = mat
 		node = mesh_inst
 	node.position = tile_pos + Vector3(0, 0.25, 0)
 	node.rotation_degrees.y = 180.0
 	animals_root.add_child(node)
-	var coin_rate: float = data.get("coin_rate", 5.0)
 	var timer := Timer.new()
-	timer.wait_time = coin_rate
+	timer.wait_time = animal.coin_rate
 	timer.autostart = true
-	timer.timeout.connect(func(): EventBus.coins_earned.emit(1))
+	timer.timeout.connect(func(): EventBus.coins_earned.emit(animal.coin_amount))
 	node.add_child(timer)
-	var target_scale: float = data.get("scale", 1.0)
-	_anim_spawn(node, target_scale)
+	_anim_spawn(node, animal.scale)
 	_anim_bob(node)
 
 
@@ -214,7 +213,7 @@ func _on_tab_changed(tab: String) -> void:
 	match tab:
 		"build":
 			if not _placing_mode:
-				EventBus.placing_mode_entered.emit(DEFAULT_ANIMAL)
+				EventBus.placing_mode_entered.emit({"name": "chicken"})
 		_:
 			if _placing_mode:
 				_exit_placing_mode()

@@ -1,20 +1,14 @@
 extends Control
 
-signal animal_selection_changed(data: Dictionary)
+const AnimalData     = preload("res://scripts/resources/animal_data.gd")
+const AnimalRegistry = preload("res://scripts/autoloads/AnimalRegistry.gd")
+
+signal animal_selection_changed(animal: AnimalData)
 signal cancelled
 
 const CARD_W := 82
 const CARD_H := 82
 const LILA   := Color(0.58, 0.44, 0.78)
-
-const DEMO_ANIMALS: Array[Dictionary] = [
-	{"name": "chicken", "color": Color(0.95, 0.90, 0.70), "scene": "res://assets/models/animals/chicken.obj", "scale": 0.5, "coin_rate": 5.0},
-	{"name": "fox",    "color": Color(0.85, 0.45, 0.15)},
-	{"name": "crane",  "color": Color(0.92, 0.92, 0.92)},
-	{"name": "tanuki", "color": Color(0.52, 0.38, 0.24)},
-	{"name": "cat",    "color": Color(0.70, 0.65, 0.60)},
-	{"name": "deer",   "color": Color(0.80, 0.60, 0.42)},
-]
 
 @onready var title_label:   Label          = $TopBar/TitleLabel
 @onready var cancel_btn:    Button         = $TopBar/CancelBtn
@@ -24,7 +18,7 @@ const DEMO_ANIMALS: Array[Dictionary] = [
 @onready var filter_btn:    Button         = $BottomPanel/Content/SubheaderRow/FilterBtn
 
 var _active_card: PanelContainer = null
-var _active_name: String = ""
+var _active_id:   String = ""
 
 
 func _ready() -> void:
@@ -33,10 +27,10 @@ func _ready() -> void:
 	EventBus.inventory_changed.connect(_on_inventory_changed)
 
 
-func open(animal_data: Dictionary) -> void:
-	_active_name     = animal_data.get("name", "")
-	title_label.text = "placing · " + _active_name
-	_build_cards(_active_name)
+func open(animal: AnimalData) -> void:
+	_active_id       = animal.id
+	title_label.text = "placing · " + animal.display_name
+	_build_cards(_active_id)
 
 
 # ── Styling ────────────────────────────────────────────────────────────────────
@@ -81,7 +75,7 @@ func _style_ui() -> void:
 
 # ── Animal cards ───────────────────────────────────────────────────────────────
 
-func _build_cards(active_name: String) -> void:
+func _build_cards(active_id: String) -> void:
 	for child in card_row.get_children():
 		child.queue_free()
 	_active_card = null
@@ -91,13 +85,13 @@ func _build_cards(active_name: String) -> void:
 		var t: String = entry["type"]
 		counts[t] = counts.get(t, 0) + 1
 
-	for type_name in GameState.purchased_animal_types:
-		var data: Dictionary = _find_animal_data(type_name)
-		if data.is_empty():
+	for type_id in GameState.purchased_animal_types:
+		var animal: AnimalData = AnimalRegistry.get_animal(type_id)
+		if not animal:
 			continue
-		var count: int = counts.get(type_name, 0)
-		var selected: bool = type_name == active_name and count > 0
-		var card := _make_card(data, selected, count)
+		var count: int = counts.get(type_id, 0)
+		var selected: bool = type_id == active_id and count > 0
+		var card := _make_card(animal, selected, count)
 		card_row.add_child(card)
 		if selected:
 			_active_card = card
@@ -105,14 +99,7 @@ func _build_cards(active_name: String) -> void:
 	animals_label.text = "your animals · %d unplaced" % GameState.unplaced_animals.size()
 
 
-func _find_animal_data(type_name: String) -> Dictionary:
-	for d in DEMO_ANIMALS:
-		if d["name"] == type_name:
-			return d
-	return {}
-
-
-func _make_card(data: Dictionary, selected: bool, count: int) -> PanelContainer:
+func _make_card(animal: AnimalData, selected: bool, count: int) -> PanelContainer:
 	var available: bool = count > 0
 
 	var panel := PanelContainer.new()
@@ -128,14 +115,14 @@ func _make_card(data: Dictionary, selected: bool, count: int) -> PanelContainer:
 
 	var preview := ColorRect.new()
 	preview.custom_minimum_size = Vector2(CARD_W - 2, CARD_H - 2)
-	var col: Color               = data["color"]
+	var col: Color               = animal.color
 	col.a                        = 1.0 if available else 0.30
 	preview.color                = col
 	preview.mouse_filter         = Control.MOUSE_FILTER_IGNORE
 	vbox.add_child(preview)
 
 	var lbl := Label.new()
-	lbl.text                 = data["name"]
+	lbl.text                 = animal.display_name
 	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	lbl.mouse_filter         = Control.MOUSE_FILTER_IGNORE
 	lbl.add_theme_font_size_override("font_size", 12)
@@ -154,7 +141,7 @@ func _make_card(data: Dictionary, selected: bool, count: int) -> PanelContainer:
 		panel.gui_input.connect(func(e: InputEvent) -> void:
 			if (e is InputEventMouseButton and e.pressed and e.button_index == MOUSE_BUTTON_LEFT) \
 			or (e is InputEventScreenTouch and e.pressed):
-				_select_card(data, panel)
+				_select_card(animal, panel)
 		)
 	return panel
 
@@ -180,14 +167,14 @@ func _apply_card_style(panel: PanelContainer, selected: bool) -> void:
 
 
 func _on_inventory_changed() -> void:
-	_build_cards(_active_name)
+	_build_cards(_active_id)
 
 
-func _select_card(data: Dictionary, panel: PanelContainer) -> void:
-	_active_name     = data["name"]
-	title_label.text = "placing · " + _active_name
+func _select_card(animal: AnimalData, panel: PanelContainer) -> void:
+	_active_id       = animal.id
+	title_label.text = "placing · " + animal.display_name
 	if _active_card:
 		_apply_card_style(_active_card, false)
 	_active_card = panel
 	_apply_card_style(panel, true)
-	animal_selection_changed.emit(data)
+	animal_selection_changed.emit(animal)

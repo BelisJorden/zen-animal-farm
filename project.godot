@@ -19,6 +19,7 @@ config/icon="res://icon.svg"
 
 GameState="*uid://cb6dy3n1eix0"
 EventBus="*uid://ws65mbqjya32"
+AnimalRegistry="*res://scripts/autoloads/AnimalRegistry.gd"
 
 [display]
 
