@@ -1,0 +1,9 @@
+[gd_resource type="Theme" format=3 uid="uid://cbtheme001"]
+
+[ext_resource type="FontFile" uid="uid://ddaisdjq2xwps" path="res://assets/fonts/Nunito-Bold.ttf" id="1_font"]
+
+[resource]
+default_font = ExtResource("1_font")
+default_font_size = 28
+Button/colors/font_color = Color(0.176, 0.125, 0.251, 1)
+Label/colors/font_color = Color(0.176, 0.125, 0.251, 1)

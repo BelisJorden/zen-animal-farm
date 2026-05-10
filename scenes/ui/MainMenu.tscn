@@ -1,0 +1,120 @@
+[gd_scene format=3 uid="uid://dl6mblhtfhm0k"]
+
+[ext_resource type="Script" uid="uid://cnt2vkw2d2qm6" path="res://scripts/ui/main_menu.gd" id="1_main"]
+[ext_resource type="PackedScene" uid="uid://cbbg000en01" path="res://scenes/ui/components/Background.tscn" id="2_bg"]
+[ext_resource type="Theme" uid="uid://cbtheme001" path="res://assets/fonts/default_theme.tres" id="3_theme"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_1"]
+size = Vector3(2, 0.25, 2)
+
+[sub_resource type="SphereMesh" id="SphereMesh_1"]
+radius = 0.32
+height = 0.64
+
+[node name="MainMenu" type="Control" unique_id=1172110287]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("3_theme")
+script = ExtResource("1_main")
+
+[node name="Background" parent="." instance=ExtResource("2_bg")]
+
+[node name="MarginContainer" type="MarginContainer" parent="." unique_id=181697502]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 40
+theme_override_constants/margin_top = 80
+theme_override_constants/margin_right = 40
+theme_override_constants/margin_bottom = 60
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer" unique_id=1852579577]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 20
+
+[node name="Logo" type="Label" parent="MarginContainer/VBoxContainer" unique_id=420032455]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 52
+text = "Zen Farm"
+horizontal_alignment = 1
+
+[node name="Tagline" type="Label" parent="MarginContainer/VBoxContainer" unique_id=1757656265]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 1, 1, 0.75)
+theme_override_font_sizes/font_size = 18
+text = "a quiet little world"
+horizontal_alignment = 1
+
+[node name="AnimalContainer" type="SubViewportContainer" parent="MarginContainer/VBoxContainer" unique_id=2135362076]
+custom_minimum_size = Vector2(0, 260)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+stretch = true
+
+[node name="AnimalViewport" type="SubViewport" parent="MarginContainer/VBoxContainer/AnimalContainer" unique_id=246530893]
+transparent_bg = true
+handle_input_locally = false
+size = Vector2i(1072, 260)
+render_target_update_mode = 4
+
+[node name="Camera3D" type="Camera3D" parent="MarginContainer/VBoxContainer/AnimalContainer/AnimalViewport" unique_id=1460332385]
+unique_name_in_owner = true
+projection = 1
+size = 3.5
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="MarginContainer/VBoxContainer/AnimalContainer/AnimalViewport" unique_id=1025469583]
+unique_name_in_owner = true
+light_color = Color(1, 0.96, 0.88, 1)
+light_energy = 1.8
+shadow_enabled = true
+
+[node name="AnimalHolder" type="Node3D" parent="MarginContainer/VBoxContainer/AnimalContainer/AnimalViewport" unique_id=60730498]
+unique_name_in_owner = true
+
+[node name="Island" type="MeshInstance3D" parent="MarginContainer/VBoxContainer/AnimalContainer/AnimalViewport/AnimalHolder" unique_id=376185558]
+mesh = SubResource("BoxMesh_1")
+
+[node name="AnimalPlaceholder" type="MeshInstance3D" parent="MarginContainer/VBoxContainer/AnimalContainer/AnimalViewport/AnimalHolder" unique_id=571186244]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+mesh = SubResource("SphereMesh_1")
+
+[node name="ButtonsContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer" unique_id=785168358]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_constants/separation = 14
+
+[node name="BeginButton" type="Button" parent="MarginContainer/VBoxContainer/ButtonsContainer" unique_id=1680504712]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(260, 62)
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "begin"
+
+[node name="SettingsButton" type="Button" parent="MarginContainer/VBoxContainer/ButtonsContainer" unique_id=1971331862]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(260, 52)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "settings"
+
+[node name="CreditsButton" type="Button" parent="MarginContainer/VBoxContainer/ButtonsContainer" unique_id=1971225064]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(260, 52)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "credits"

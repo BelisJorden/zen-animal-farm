@@ -1,0 +1,39 @@
+[gd_scene format=3 uid="uid://cbfarm00en01"]
+
+[ext_resource type="Script" path="res://scripts/world/farm.gd" id="1_farm"]
+[ext_resource type="PackedScene" uid="uid://cbgrid00en01" path="res://scenes/world/Grid.tscn" id="2_grid"]
+[ext_resource type="PackedScene" uid="uid://cbplui00en01" path="res://scenes/ui/PlacingUI.tscn" id="3_placing"]
+
+[sub_resource type="Environment" id="Environment_1"]
+background_mode = 1
+background_color = Color(0, 0, 0, 0)
+ambient_light_source = 2
+ambient_light_color = Color(0.84, 0.88, 0.92, 1)
+ambient_light_energy = 0.85
+
+[node name="Farm" type="Node3D"]
+script = ExtResource("1_farm")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_1")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.866025, -0.353553, 0.353553, 0, 0.707107, 0.707107, -0.5, -0.612372, 0.612372, 0, 8, 0)
+light_color = Color(1, 0.96, 0.88, 1)
+light_energy = 1.6
+shadow_enabled = true
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(0.707107, -0.5, 0.5, 0, 0.707107, 0.707107, -0.707107, -0.5, 0.5, 5.66, 8.0, 5.66)
+projection = 1
+size = 8.0
+
+[node name="Grid" parent="." instance=ExtResource("2_grid")]
+
+[node name="Animals" type="Node3D" parent="."]
+
+[node name="PlacingLayer" type="CanvasLayer" parent="."]
+layer = 2
+
+[node name="PlacingUI" parent="PlacingLayer" instance=ExtResource("3_placing")]
+visible = false

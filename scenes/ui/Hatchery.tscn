@@ -1,0 +1,199 @@
+[gd_scene format=3 uid="uid://cbhatch00001"]
+
+[ext_resource type="Script" path="res://scripts/ui/hatchery.gd" id="1_script"]
+[ext_resource type="Shader" path="res://assets/shaders/gradient_background.gdshader" id="2_shader"]
+[ext_resource type="Theme" uid="uid://cbtheme001" path="res://assets/fonts/default_theme.tres" id="3_theme"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_bg"]
+shader = ExtResource("2_shader")
+shader_parameter/color_top    = Color(0.769, 0.682, 0.867, 1.0)
+shader_parameter/color_bottom = Color(0.961, 0.769, 0.816, 1.0)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_egg"]
+bg_color = Color(0.97, 0.94, 0.88, 1.0)
+corner_radius_top_left = 70
+corner_radius_top_right = 70
+corner_radius_bottom_left = 56
+corner_radius_bottom_right = 56
+shadow_color = Color(0.22, 0.16, 0.32, 0.13)
+shadow_size = 12
+shadow_offset = Vector2(0, 5)
+
+[node name="Hatchery" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("3_theme")
+script = ExtResource("1_script")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+material = SubResource("ShaderMaterial_bg")
+
+[node name="MainLayout" type="VBoxContainer" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 0
+
+[node name="HeaderBar" type="HBoxContainer" parent="MainLayout"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 80)
+theme_override_constants/separation = 0
+
+[node name="BackBtn" type="Button" parent="MainLayout/HeaderBar"]
+layout_mode = 2
+custom_minimum_size = Vector2(110, 0)
+size_flags_vertical = 4
+flat = true
+theme_override_font_sizes/font_size = 15
+theme_override_colors/font_color = Color(0.22, 0.16, 0.32, 1)
+text = "< back"
+
+[node name="TitleLabel" type="Label" parent="MainLayout/HeaderBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(0.22, 0.16, 0.32, 1)
+text = "hatchery"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HeaderSpacer" type="Control" parent="MainLayout/HeaderBar"]
+layout_mode = 2
+custom_minimum_size = Vector2(110, 0)
+
+[node name="EggSection" type="VBoxContainer" parent="MainLayout"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 16
+
+[node name="TopSpacer" type="Control" parent="MainLayout/EggSection"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="EggCenter" type="CenterContainer" parent="MainLayout/EggSection"]
+layout_mode = 2
+
+[node name="EggPivot" type="Control" parent="MainLayout/EggSection/EggCenter"]
+layout_mode = 2
+custom_minimum_size = Vector2(130, 190)
+
+[node name="EggPanel" type="Panel" parent="MainLayout/EggSection/EggCenter/EggPivot"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_egg")
+
+[node name="StatusLabel" type="Label" parent="MainLayout/EggSection"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.22, 0.16, 0.32, 1)
+text = "almost there..."
+horizontal_alignment = 1
+
+[node name="HintLabel" type="Label" parent="MainLayout/EggSection"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.22, 0.16, 0.32, 0.58)
+text = "tap . tap . tap"
+horizontal_alignment = 1
+
+[node name="DotsCenter" type="CenterContainer" parent="MainLayout/EggSection"]
+layout_mode = 2
+
+[node name="DotsRow" type="HBoxContainer" parent="MainLayout/EggSection/DotsCenter"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Dot1" type="Panel" parent="MainLayout/EggSection/DotsCenter/DotsRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(16, 16)
+
+[node name="Dot2" type="Panel" parent="MainLayout/EggSection/DotsCenter/DotsRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(16, 16)
+
+[node name="Dot3" type="Panel" parent="MainLayout/EggSection/DotsCenter/DotsRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(16, 16)
+
+[node name="Dot4" type="Panel" parent="MainLayout/EggSection/DotsCenter/DotsRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(16, 16)
+
+[node name="Dot5" type="Panel" parent="MainLayout/EggSection/DotsCenter/DotsRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(16, 16)
+
+[node name="BottomSpacer" type="Control" parent="MainLayout/EggSection"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="RarityRow" type="HBoxContainer" parent="MainLayout"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 60)
+theme_override_constants/separation = 12
+
+[node name="RSpacer1" type="Control" parent="MainLayout/RarityRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="CommonBtn" type="Button" parent="MainLayout/RarityRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(96, 44)
+size_flags_vertical = 4
+theme_override_font_sizes/font_size = 14
+text = "common"
+
+[node name="RareBtn" type="Button" parent="MainLayout/RarityRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(80, 44)
+size_flags_vertical = 4
+theme_override_font_sizes/font_size = 14
+text = "rare"
+
+[node name="MysticBtn" type="Button" parent="MainLayout/RarityRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(96, 44)
+size_flags_vertical = 4
+theme_override_font_sizes/font_size = 14
+text = "mystic"
+
+[node name="RSpacer2" type="Control" parent="MainLayout/RarityRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="BottomSection" type="MarginContainer" parent="MainLayout"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 96)
+theme_override_constants/margin_left = 32
+theme_override_constants/margin_right = 32
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_bottom = 24
+
+[node name="TapBtn" type="Button" parent="MainLayout/BottomSection"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+text = "tap to crack  * 3"

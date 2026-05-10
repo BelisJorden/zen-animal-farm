@@ -1,0 +1,85 @@
+[gd_scene format=3 uid="uid://cbplui00en01"]
+
+[ext_resource type="Script" uid="uid://7vdbpa5fpnr0" path="res://scripts/ui/placing_ui.gd" id="1_placing"]
+
+[node name="PlacingUI" type="Control" unique_id=1857503144]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_placing")
+
+[node name="TopBar" type="Control" parent="." unique_id=1816543478]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 72.0
+grow_horizontal = 2
+mouse_filter = 2
+
+[node name="TitleLabel" type="Label" parent="TopBar" unique_id=678733045]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.22, 0.16, 0.32, 1)
+theme_override_font_sizes/font_size = 18
+text = "placing . fox"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="CancelBtn" type="Button" parent="TopBar" unique_id=1085519663]
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 16.0
+offset_top = -22.0
+offset_right = 120.0
+offset_bottom = 22.0
+grow_vertical = 2
+theme_override_font_sizes/font_size = 15
+text = "x  cancel"
+
+[node name="BottomPanel" type="PanelContainer" parent="." unique_id=2083207990]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -220.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="Content" type="VBoxContainer" parent="BottomPanel" unique_id=509443664]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="SubheaderRow" type="HBoxContainer" parent="BottomPanel/Content" unique_id=897265415]
+layout_mode = 2
+
+[node name="AnimalsLabel" type="Label" parent="BottomPanel/Content/SubheaderRow" unique_id=989084180]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.28, 0.2, 0.38, 1)
+theme_override_font_sizes/font_size = 14
+text = "your animals . 7 unplaced"
+
+[node name="FilterBtn" type="Button" parent="BottomPanel/Content/SubheaderRow" unique_id=468409801]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "filter"
+
+[node name="AnimalScroll" type="ScrollContainer" parent="BottomPanel/Content" unique_id=1183374071]
+custom_minimum_size = Vector2(0, 120)
+layout_mode = 2
+vertical_scroll_mode = 0
+
+[node name="AnimalCardRow" type="HBoxContainer" parent="BottomPanel/Content/AnimalScroll" unique_id=1700530999]
+layout_mode = 2
+theme_override_constants/separation = 10

@@ -1,0 +1,19 @@
+[gd_scene format=3 uid="uid://cbbg000en01"]
+
+[ext_resource type="Shader" path="res://assets/shaders/gradient_background.gdshader" id="1_shader"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_1"]
+shader = ExtResource("1_shader")
+shader_parameter/color_top    = Color(0.769, 0.682, 0.867, 1.0)
+shader_parameter/color_bottom = Color(0.941, 0.835, 0.722, 1.0)
+
+[node name="Background" type="ColorRect"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+material = SubResource("ShaderMaterial_1")
+color = Color(1, 1, 1, 1)

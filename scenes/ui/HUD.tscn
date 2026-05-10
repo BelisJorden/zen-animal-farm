@@ -1,0 +1,172 @@
+[gd_scene format=3 uid="uid://cbhud000en01"]
+
+[ext_resource type="Script" path="res://scripts/ui/hud.gd" id="1_hud"]
+[ext_resource type="Theme" uid="uid://cbtheme001" path="res://assets/fonts/default_theme.tres" id="2_theme"]
+
+[node name="HUD" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme = ExtResource("2_theme")
+script = ExtResource("1_hud")
+
+[node name="TopPanel" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 88.0
+grow_horizontal = 2
+
+[node name="TopRow" type="HBoxContainer" parent="TopPanel"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="PlayerInfo" type="HBoxContainer" parent="TopPanel/TopRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="Avatar" type="PanelContainer" parent="TopPanel/TopRow/PlayerInfo"]
+layout_mode = 2
+custom_minimum_size = Vector2(48, 48)
+
+[node name="AvatarLetter" type="Label" parent="TopPanel/TopRow/PlayerInfo/Avatar"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+text = "Y"
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+
+[node name="PlayerDetails" type="VBoxContainer" parent="TopPanel/TopRow/PlayerInfo"]
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_constants/separation = 2
+
+[node name="NameLabel" type="Label" parent="TopPanel/TopRow/PlayerInfo/PlayerDetails"]
+layout_mode = 2
+text = "Yumi"
+theme_override_font_sizes/font_size = 17
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+
+[node name="LevelDayLabel" type="Label" parent="TopPanel/TopRow/PlayerInfo/PlayerDetails"]
+layout_mode = 2
+text = "lv.1 . dag 1"
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(1, 1, 1, 0.7)
+
+[node name="HSpacer" type="Control" parent="TopPanel/TopRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="CoinCounter" type="HBoxContainer" parent="TopPanel/TopRow"]
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="CoinIcon" type="Label" parent="TopPanel/TopRow/CoinCounter"]
+layout_mode = 2
+text = "o"
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(1.0, 0.85, 0.22, 1)
+
+[node name="CoinAmountLabel" type="Label" parent="TopPanel/TopRow/CoinCounter"]
+layout_mode = 2
+text = "0"
+theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+
+[node name="NotificationPopup" type="PanelContainer" parent="."]
+layout_mode = 1
+anchor_top = 0.38
+anchor_bottom = 0.38
+offset_left = 16.0
+offset_right = 216.0
+offset_top = -24.0
+offset_bottom = 24.0
+visible = false
+mouse_filter = 2
+
+[node name="NotifLabel" type="Label" parent="NotificationPopup"]
+layout_mode = 2
+text = "+3 ready"
+theme_override_font_sizes/font_size = 15
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+
+[node name="QuestBar" type="PanelContainer" parent="."]
+layout_mode = 1
+anchor_left = 0.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -160.0
+offset_bottom = -88.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="QuestContent" type="VBoxContainer" parent="QuestBar"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="QuestLabel" type="Label" parent="QuestBar/QuestContent"]
+layout_mode = 2
+text = "collect 3 spirit shards . 2/3"
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.28, 0.20, 0.38, 1)
+
+[node name="QuestProgress" type="ProgressBar" parent="QuestBar/QuestContent"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 8)
+min_value = 0.0
+max_value = 3.0
+value = 2.0
+show_percentage = false
+
+[node name="BottomNav" type="PanelContainer" parent="."]
+layout_mode = 1
+anchor_left = 0.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -88.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="TabRow" type="HBoxContainer" parent="BottomNav"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="FarmTab" type="Button" parent="BottomNav/TabRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "farm"
+theme_override_font_sizes/font_size = 14
+
+[node name="BuildTab" type="Button" parent="BottomNav/TabRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "build"
+theme_override_font_sizes/font_size = 14
+
+[node name="EggTab" type="Button" parent="BottomNav/TabRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "egg"
+theme_override_font_sizes/font_size = 14
+
+[node name="CareTab" type="Button" parent="BottomNav/TabRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "care"
+theme_override_font_sizes/font_size = 14
+
+[node name="MoreTab" type="Button" parent="BottomNav/TabRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "more"
+theme_override_font_sizes/font_size = 14

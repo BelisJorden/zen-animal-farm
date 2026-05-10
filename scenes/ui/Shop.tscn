@@ -1,0 +1,205 @@
+[gd_scene format=3 uid="uid://cbshop00001"]
+
+[ext_resource type="Script" path="res://scripts/ui/shop.gd" id="1_script"]
+[ext_resource type="Shader" path="res://assets/shaders/gradient_background.gdshader" id="2_shader"]
+[ext_resource type="Theme" uid="uid://cbtheme001" path="res://assets/fonts/default_theme.tres" id="3_theme"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_bg"]
+shader = ExtResource("2_shader")
+shader_parameter/color_top    = Color(0.84, 0.80, 0.93, 1.0)
+shader_parameter/color_bottom = Color(0.96, 0.92, 0.86, 1.0)
+
+[node name="Shop" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("3_theme")
+script = ExtResource("1_script")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+material = SubResource("ShaderMaterial_bg")
+
+[node name="MainLayout" type="VBoxContainer" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 0
+
+[node name="HeaderBar" type="HBoxContainer" parent="MainLayout"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 80)
+theme_override_constants/separation = 0
+
+[node name="BackBtn" type="Button" parent="MainLayout/HeaderBar"]
+layout_mode = 2
+custom_minimum_size = Vector2(100, 0)
+size_flags_vertical = 4
+flat = true
+theme_override_font_sizes/font_size = 15
+theme_override_colors/font_color = Color(0.22, 0.16, 0.32, 1)
+text = "< back"
+
+[node name="TitleLabel" type="Label" parent="MainLayout/HeaderBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(0.22, 0.16, 0.32, 1)
+text = "shop"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="CoinRow" type="HBoxContainer" parent="MainLayout/HeaderBar"]
+layout_mode = 2
+custom_minimum_size = Vector2(100, 0)
+size_flags_vertical = 4
+theme_override_constants/separation = 4
+
+[node name="CoinIcon" type="Label" parent="MainLayout/HeaderBar/CoinRow"]
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(1.0, 0.82, 0.20, 1)
+text = "o"
+vertical_alignment = 1
+
+[node name="CoinLabel" type="Label" parent="MainLayout/HeaderBar/CoinRow"]
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.22, 0.16, 0.32, 1)
+text = "0"
+vertical_alignment = 1
+
+[node name="CategoryTabs" type="HBoxContainer" parent="MainLayout"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 52)
+theme_override_constants/separation = 0
+
+[node name="DecorTab" type="Button" parent="MainLayout/CategoryTabs"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+flat = true
+theme_override_font_sizes/font_size = 13
+text = "decor"
+
+[node name="TilesTab" type="Button" parent="MainLayout/CategoryTabs"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+flat = true
+theme_override_font_sizes/font_size = 13
+text = "tiles"
+
+[node name="AnimalsTab" type="Button" parent="MainLayout/CategoryTabs"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+flat = true
+theme_override_font_sizes/font_size = 13
+text = "animals"
+
+[node name="SeedsTab" type="Button" parent="MainLayout/CategoryTabs"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+flat = true
+theme_override_font_sizes/font_size = 13
+text = "seeds"
+
+[node name="BundlesTab" type="Button" parent="MainLayout/CategoryTabs"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+flat = true
+theme_override_font_sizes/font_size = 13
+text = "bundles"
+
+[node name="ShopScroll" type="ScrollContainer" parent="MainLayout"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="ShopPad" type="MarginContainer" parent="MainLayout/ShopScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_bottom = 24
+
+[node name="ShopContent" type="VBoxContainer" parent="MainLayout/ShopScroll/ShopPad"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 16
+
+[node name="FeaturedBanner" type="PanelContainer" parent="MainLayout/ShopScroll/ShopPad/ShopContent"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 150)
+
+[node name="BannerInner" type="MarginContainer" parent="MainLayout/ShopScroll/ShopPad/ShopContent/FeaturedBanner"]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="BannerVBox" type="VBoxContainer" parent="MainLayout/ShopScroll/ShopPad/ShopContent/FeaturedBanner/BannerInner"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="BannerEyebrow" type="Label" parent="MainLayout/ShopScroll/ShopPad/ShopContent/FeaturedBanner/BannerInner/BannerVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+theme_override_colors/font_color = Color(1, 1, 1, 0.7)
+text = "WEEKLY MYSTERY"
+
+[node name="BannerTitle" type="Label" parent="MainLayout/ShopScroll/ShopPad/ShopContent/FeaturedBanner/BannerInner/BannerVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+text = "shrine bundle"
+
+[node name="BannerSub" type="Label" parent="MainLayout/ShopScroll/ShopPad/ShopContent/FeaturedBanner/BannerInner/BannerVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(1, 1, 1, 0.75)
+text = "fox lantern + shrine gate + sakura tree"
+
+[node name="BannerSpacer" type="Control" parent="MainLayout/ShopScroll/ShopPad/ShopContent/FeaturedBanner/BannerInner/BannerVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="BannerBtn" type="Button" parent="MainLayout/ShopScroll/ShopPad/ShopContent/FeaturedBanner/BannerInner/BannerVBox"]
+layout_mode = 2
+size_flags_horizontal = 0
+theme_override_font_sizes/font_size = 15
+theme_override_colors/font_color = Color(0.58, 0.44, 0.78, 1)
+text = "* 12  buy bundle"
+
+[node name="SectionLabel" type="Label" parent="MainLayout/ShopScroll/ShopPad/ShopContent"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 15
+theme_override_colors/font_color = Color(0.22, 0.16, 0.32, 0.65)
+text = "decor"
+
+[node name="ItemGrid" type="GridContainer" parent="MainLayout/ShopScroll/ShopPad/ShopContent"]
+layout_mode = 2
+size_flags_horizontal = 3
+columns = 3
+theme_override_constants/h_separation = 10
+theme_override_constants/v_separation = 10
