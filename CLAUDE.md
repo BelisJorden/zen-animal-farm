@@ -82,7 +82,7 @@ farm groeit → nieuwe farms ontgrendelen
 
 ### Dieren systeem
 - Dieren gedefinieerd als `AnimalData` Resource (`.tres` in `data/animals/`)
-- Velden: `id`, `display_name`, `scene_path`, `color`, `scale`, `price`, `rarity`, `coin_rate`, `coin_amount`, `exp_gain`
+- Velden: `id`, `display_name`, `scene_path`, `color`, `scale`, `spawn_rotation`, `price`, `rarity`, `coin_rate`, `coin_amount`, `exp_gain`
 - Dieren hebben een **ster-niveau** (1★ t/m 5★, nog niet geïmplementeerd)
 - **Combineren:** 2 dieren van zelfde ster → 1 dier van volgende ster (nog niet geïmplementeerd)
 - **Training:** dieren individueel trainen → hogere productiviteit (nog niet geïmplementeerd)
@@ -90,12 +90,16 @@ farm groeit → nieuwe farms ontgrendelen
 - **Rarity:** common / rare / mystic (en later: legendary)
 
 ### Dieren plaatsen (geïmplementeerd)
-1. Tab `build` → `EventBus.placing_mode_entered` → PlacingUI opent
-2. Speler tikt op tile → `EventBus.tile_tapped(col, row, world_pos)`
-3. `farm.gd._on_tile_tapped`: check placing mode + vrije tile + inventory
-4. Bij vrije tile: `GameState.remove_from_inventory`, `tile_layer.occupy_tile`, `_spawn_animal`
-5. Bij bezette tile: `tile_layer.shake_tile` (rode puls, 280ms)
-6. Dier spawnt met scale-animatie (0→target in 0.3s, ease-out bounce) + bob loop
+Flow: **tile selecteren eerst, dan dier kiezen**
+
+1. Speler tikt vrije tile → Decal highlight verschijnt → `EventBus.tile_selected` geëmit
+2. Als build menu nog dicht was → `EventBus.placing_mode_entered` → PlacingUI opent
+3. Speler tikt dier-card in PlacingUI → `animal_selection_changed` → `farm.gd._on_animal_selected`
+4. Tile is geselecteerd → `_place_on_selected_tile()`: inventory aftrek, tile bezet, dier spawn, highlight weg
+5. Bij bezette tile tikken: `tile_layer.shake_tile` (rode puls, 280ms), selectie ongewijzigd
+6. Andere tile tikken terwijl menu open: highlight verplaatst, geen plaatsing
+7. Menu sluiten: `_exit_placing_mode()` → `_clear_tile_selection()` → highlight verdwijnt
+8. Dier spawnt met scale-animatie (0→`animal.scale` in 0.3s, ease-out bounce) + bob loop
 
 ### Gacha / Hatchery
 - Eieren kopen met coins of spirit shards
@@ -148,7 +152,7 @@ res://
 │       └── EventBus.gd       # globale signalen
 ├── assets/
 │   ├── models/
-│   │   ├── animals/      # ChickenClaudeDesign.obj + .png texture
+│   │   ├── animals/      # ChickenClaudeDesign.obj, SheepClaudeDesign.obj + .png textures
 │   │   └── farm/         # FarmGrid.obj + FarmGrid.png texture
 │   ├── shaders/          # gradient_background.gdshader
 │   ├── audio/
@@ -220,6 +224,14 @@ GRID_ORIGIN = Vector3(-1.75, 0, -1.75)
 - `occupy_tile(col, row)` / `free_tile(col, row)`
 - `shake_tile(col, row)` — rode BoxMesh-marker: scale puls 1→1.4→0 in 280ms
 
+### Tile selectie highlight (farm_grid.gd)
+- Één herbruikbare `Decal` node, child van TileLayer, standaard `visible=false`
+- Texture: procedureel aangemaakt — 64×64 RGBA Image, gaussian-achtige soft circle (`exp(-d²×2.5)`), lila `Color(0.78, 0.60, 0.95)`
+- `select_tile(col, row)`: verplaats Decal naar tile center (Y=0.5), fade in `modulate.a` 0→0.85 in 0.15s; als al zichtbaar → directe positie-update
+- `deselect_tile()`: fade out `modulate.a` 0.85→0 in 0.10s, daarna `visible=false`
+- `EventBus.tile_selected(col, row, world_pos)` / `EventBus.tile_deselected()` voor cross-scene communicatie
+- Decal size: `Vector3(TILE_SIZE*0.85, 1.0, TILE_SIZE*0.85)` — let op: werkt alleen als FarmGrid `shading_mode=0` (PER_PIXEL) heeft
+
 ---
 
 ## Camera setup
@@ -238,7 +250,8 @@ camera.rotation_deg = Vector3(-45, 45, 0)
 ```gdscript
 # Farm / world
 signal tile_tapped(col: int, row: int, world_pos: Vector3)
-signal tile_selected(tile_pos: Vector2i)
+signal tile_selected(col: int, row: int, world_pos: Vector3)
+signal tile_deselected()
 signal animal_placed(animal: Node)
 signal animal_removed(animal: Node)
 signal farm_unlocked(farm_id: String)
@@ -288,6 +301,7 @@ signal quest_completed(quest_id: String)
 ## Animaties & feel (prioriteit)
 - Spawn: scale `Vector3.ZERO → Vector3.ONE * animal.scale` in 0.3s, EASE_OUT + TRANS_BACK
 - Dier idle: bob ±0.03 units op/neer, 1.1s per richting, EASE_IN_OUT SINE, loopt oneindig
+- Tile selectie: Decal fade in `modulate.a` 0→0.85 in 0.15s; deselect fade uit in 0.10s
 - Tile bezet-feedback: rode puls (scale 1→1.4→0) in 280ms, daarna verborgen
 - Coin collect: float omhoog + fade out (nog niet geïmplementeerd)
 - Ei crack: shake + particles bij elke tap (nog niet geïmplementeerd)
@@ -345,6 +359,9 @@ func spend_coins(amount: int) -> bool
 | 2026-05-14 | Camera: orthogonaal, size=11, positie=(5.66,8,5.66), rotatie=(-45°,45°,0°) |
 | 2026-05-14 | SubViewport: physics_object_picking=true (noodzakelijk voor Area3D input in SubViewport) |
 | 2026-05-14 | Dier-plaatsing geïmplementeerd: tile_tapped → check vrij + inventory → spawn + occupy |
+| 2026-05-14 | Tile selectie flow: tap tile eerst → highlight + menu open → dier selecteren → plaatsen (niet andersom) |
+| 2026-05-14 | Tile highlight: Decal node met procedurele gaussian-circle texture (64×64 RGBA), lila, fade animatie |
+| 2026-05-14 | AnimalData.spawn_rotation toegevoegd (default 180.0) — chicken=90°, sheep=0° |
 
 ---
 

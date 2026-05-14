@@ -18,6 +18,10 @@ var _drag_start  := Vector2.ZERO
 var _cam_start   := Vector3.ZERO
 var _is_dragging := false
 
+var _selected_tile_col: int     = -1
+var _selected_tile_row: int     = -1
+var _selected_tile_pos: Vector3 = Vector3.ZERO
+
 
 func _ready() -> void:
 	placing_ui.visible = false
@@ -105,6 +109,7 @@ func _exit_placing_mode() -> void:
 	if _ghost:
 		_ghost.queue_free()
 		_ghost = null
+	_clear_tile_selection()
 	EventBus.placing_mode_exited.emit()
 
 
@@ -113,6 +118,8 @@ func _on_animal_selected(animal: AnimalData) -> void:
 	if _ghost:
 		_ghost.queue_free()
 	_spawn_ghost(animal)
+	if _selected_tile_col >= 0:
+		_place_on_selected_tile()
 
 
 func _spawn_ghost(animal: AnimalData) -> void:
@@ -151,7 +158,7 @@ func _spawn_animal(tile_pos: Vector3, animal: AnimalData) -> void:
 		mesh_inst.material_override = mat
 		node = mesh_inst
 	node.position = tile_pos + Vector3(0, 0.25, 0)
-	node.rotation_degrees.y = 180.0
+	node.rotation_degrees.y = animal.spawn_rotation
 	animals_root.add_child(node)
 	var timer := Timer.new()
 	timer.wait_time = animal.coin_rate
@@ -178,18 +185,40 @@ func _anim_bob(node: Node3D) -> void:
 		.set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
 
 
-# ── Tile tap ──────────────────────────────────────────────────────────────────
+# ── Tile tap & selection ──────────────────────────────────────────────────────
 
 func _on_tile_tapped(col: int, row: int, world_pos: Vector3) -> void:
-	if not _placing_mode or not _selected_animal:
-		return
 	if not tile_layer.is_tile_free(col, row):
 		tile_layer.shake_tile(col, row)
 		return
+	_selected_tile_col = col
+	_selected_tile_row = row
+	_selected_tile_pos = world_pos
+	tile_layer.select_tile(col, row)
+	EventBus.tile_selected.emit(col, row, world_pos)
+	if not _placing_mode:
+		EventBus.placing_mode_entered.emit({"name": "chicken"})
+
+
+func _place_on_selected_tile() -> void:
+	if not tile_layer.is_tile_free(_selected_tile_col, _selected_tile_row):
+		tile_layer.shake_tile(_selected_tile_col, _selected_tile_row)
+		_clear_tile_selection()
+		return
 	if not GameState.remove_from_inventory(_selected_animal.id):
 		return
-	tile_layer.occupy_tile(col, row)
-	_spawn_animal(world_pos, _selected_animal)
+	tile_layer.occupy_tile(_selected_tile_col, _selected_tile_row)
+	_spawn_animal(_selected_tile_pos, _selected_animal)
+	_clear_tile_selection()
+
+
+func _clear_tile_selection() -> void:
+	if _selected_tile_col < 0:
+		return
+	_selected_tile_col = -1
+	_selected_tile_row = -1
+	tile_layer.deselect_tile()
+	EventBus.tile_deselected.emit()
 
 
 # ── Tab handler ────────────────────────────────────────────────────────────────

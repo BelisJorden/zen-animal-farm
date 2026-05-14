@@ -3,7 +3,8 @@ extends Node
 # Farm / world
 signal animal_placed(animal: Node)
 signal animal_removed(animal: Node)
-signal tile_selected(tile_pos: Vector2i)
+signal tile_selected(col: int, row: int, world_pos: Vector3)
+signal tile_deselected()
 signal tile_tapped(col: int, row: int, world_pos: Vector3)
 signal farm_unlocked(farm_id: String)
 
