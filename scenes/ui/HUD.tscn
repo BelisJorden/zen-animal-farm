@@ -1,9 +1,9 @@
 [gd_scene format=3 uid="uid://cbhud000en01"]
 
-[ext_resource type="Script" path="res://scripts/ui/hud.gd" id="1_hud"]
+[ext_resource type="Script" uid="uid://djbq04ysy0dnv" path="res://scripts/ui/hud.gd" id="1_hud"]
 [ext_resource type="Theme" uid="uid://cbtheme001" path="res://assets/fonts/default_theme.tres" id="2_theme"]
 
-[node name="HUD" type="Control"]
+[node name="HUD" type="Control" unique_id=514190164]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -14,93 +14,94 @@ mouse_filter = 2
 theme = ExtResource("2_theme")
 script = ExtResource("1_hud")
 
-[node name="TopPanel" type="PanelContainer" parent="."]
+[node name="TopPanel" type="PanelContainer" parent="." unique_id=125255163]
 layout_mode = 1
 anchors_preset = 10
 anchor_right = 1.0
 offset_bottom = 88.0
 grow_horizontal = 2
 
-[node name="TopRow" type="HBoxContainer" parent="TopPanel"]
+[node name="TopRow" type="HBoxContainer" parent="TopPanel" unique_id=1570129161]
 layout_mode = 2
 theme_override_constants/separation = 0
 
-[node name="PlayerInfo" type="HBoxContainer" parent="TopPanel/TopRow"]
+[node name="PlayerInfo" type="HBoxContainer" parent="TopPanel/TopRow" unique_id=1083552825]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 10
 
-[node name="Avatar" type="PanelContainer" parent="TopPanel/TopRow/PlayerInfo"]
-layout_mode = 2
+[node name="Avatar" type="PanelContainer" parent="TopPanel/TopRow/PlayerInfo" unique_id=916740190]
 custom_minimum_size = Vector2(48, 48)
+layout_mode = 2
 
-[node name="AvatarLetter" type="Label" parent="TopPanel/TopRow/PlayerInfo/Avatar"]
+[node name="AvatarLetter" type="Label" parent="TopPanel/TopRow/PlayerInfo/Avatar" unique_id=1122697784]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 20
 text = "Y"
 horizontal_alignment = 1
 vertical_alignment = 1
-theme_override_font_sizes/font_size = 20
-theme_override_colors/font_color = Color(1, 1, 1, 1)
 
-[node name="PlayerDetails" type="VBoxContainer" parent="TopPanel/TopRow/PlayerInfo"]
+[node name="PlayerDetails" type="VBoxContainer" parent="TopPanel/TopRow/PlayerInfo" unique_id=348244127]
 layout_mode = 2
 size_flags_vertical = 4
 theme_override_constants/separation = 2
 
-[node name="NameLabel" type="Label" parent="TopPanel/TopRow/PlayerInfo/PlayerDetails"]
+[node name="NameLabel" type="Label" parent="TopPanel/TopRow/PlayerInfo/PlayerDetails" unique_id=18026408]
 layout_mode = 2
-text = "Yumi"
-theme_override_font_sizes/font_size = 17
 theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 17
+text = "Yumi"
 
-[node name="LevelDayLabel" type="Label" parent="TopPanel/TopRow/PlayerInfo/PlayerDetails"]
+[node name="LevelDayLabel" type="Label" parent="TopPanel/TopRow/PlayerInfo/PlayerDetails" unique_id=442010767]
 layout_mode = 2
-text = "lv.1 . dag 1"
-theme_override_font_sizes/font_size = 13
 theme_override_colors/font_color = Color(1, 1, 1, 0.7)
+theme_override_font_sizes/font_size = 13
+text = "lv.1 . dag 1"
 
-[node name="HSpacer" type="Control" parent="TopPanel/TopRow"]
+[node name="HSpacer" type="Control" parent="TopPanel/TopRow" unique_id=1171059819]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="CoinCounter" type="HBoxContainer" parent="TopPanel/TopRow"]
+[node name="CoinCounter" type="HBoxContainer" parent="TopPanel/TopRow" unique_id=459560046]
 layout_mode = 2
 theme_override_constants/separation = 5
 
-[node name="CoinIcon" type="Label" parent="TopPanel/TopRow/CoinCounter"]
+[node name="CoinIcon" type="Label" parent="TopPanel/TopRow/CoinCounter" unique_id=153822777]
 layout_mode = 2
-text = "o"
+theme_override_colors/font_color = Color(1, 0.85, 0.22, 1)
 theme_override_font_sizes/font_size = 22
-theme_override_colors/font_color = Color(1.0, 0.85, 0.22, 1)
+text = "o"
 
-[node name="CoinAmountLabel" type="Label" parent="TopPanel/TopRow/CoinCounter"]
+[node name="CoinAmountLabel" type="Label" parent="TopPanel/TopRow/CoinCounter" unique_id=100503365]
 layout_mode = 2
-text = "0"
-theme_override_font_sizes/font_size = 20
 theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 20
+text = "0"
 
-[node name="NotificationPopup" type="PanelContainer" parent="."]
+[node name="NotificationPopup" type="PanelContainer" parent="." unique_id=1085399927]
+visible = false
 layout_mode = 1
+anchors_preset = -1
 anchor_top = 0.38
 anchor_bottom = 0.38
 offset_left = 16.0
-offset_right = 216.0
 offset_top = -24.0
+offset_right = 216.0
 offset_bottom = 24.0
-visible = false
 mouse_filter = 2
 
-[node name="NotifLabel" type="Label" parent="NotificationPopup"]
+[node name="NotifLabel" type="Label" parent="NotificationPopup" unique_id=216510939]
 layout_mode = 2
-text = "+3 ready"
-theme_override_font_sizes/font_size = 15
 theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 15
+text = "+3 ready"
 
-[node name="QuestBar" type="PanelContainer" parent="."]
+[node name="QuestBar" type="PanelContainer" parent="." unique_id=625857943]
 layout_mode = 1
-anchor_left = 0.0
+anchors_preset = 12
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -109,27 +110,26 @@ offset_bottom = -88.0
 grow_horizontal = 2
 grow_vertical = 0
 
-[node name="QuestContent" type="VBoxContainer" parent="QuestBar"]
+[node name="QuestContent" type="VBoxContainer" parent="QuestBar" unique_id=1849228014]
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="QuestLabel" type="Label" parent="QuestBar/QuestContent"]
+[node name="QuestLabel" type="Label" parent="QuestBar/QuestContent" unique_id=980092855]
 layout_mode = 2
-text = "collect 3 spirit shards . 2/3"
+theme_override_colors/font_color = Color(0.28, 0.2, 0.38, 1)
 theme_override_font_sizes/font_size = 14
-theme_override_colors/font_color = Color(0.28, 0.20, 0.38, 1)
+text = "collect 3 spirit shards . 2/3"
 
-[node name="QuestProgress" type="ProgressBar" parent="QuestBar/QuestContent"]
-layout_mode = 2
+[node name="QuestProgress" type="ProgressBar" parent="QuestBar/QuestContent" unique_id=169820198]
 custom_minimum_size = Vector2(0, 8)
-min_value = 0.0
+layout_mode = 2
 max_value = 3.0
 value = 2.0
 show_percentage = false
 
-[node name="BottomNav" type="PanelContainer" parent="."]
+[node name="BottomNav" type="PanelContainer" parent="." unique_id=1816483400]
 layout_mode = 1
-anchor_left = 0.0
+anchors_preset = 12
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -137,36 +137,36 @@ offset_top = -88.0
 grow_horizontal = 2
 grow_vertical = 0
 
-[node name="TabRow" type="HBoxContainer" parent="BottomNav"]
+[node name="TabRow" type="HBoxContainer" parent="BottomNav" unique_id=1644611551]
 layout_mode = 2
 theme_override_constants/separation = 0
 
-[node name="FarmTab" type="Button" parent="BottomNav/TabRow"]
+[node name="FarmTab" type="Button" parent="BottomNav/TabRow" unique_id=1448595996]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 14
 text = "farm"
-theme_override_font_sizes/font_size = 14
 
-[node name="BuildTab" type="Button" parent="BottomNav/TabRow"]
+[node name="BuildTab" type="Button" parent="BottomNav/TabRow" unique_id=457261742]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 14
 text = "build"
-theme_override_font_sizes/font_size = 14
 
-[node name="EggTab" type="Button" parent="BottomNav/TabRow"]
+[node name="EggTab" type="Button" parent="BottomNav/TabRow" unique_id=621740080]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 14
 text = "egg"
-theme_override_font_sizes/font_size = 14
 
-[node name="CareTab" type="Button" parent="BottomNav/TabRow"]
+[node name="CareTab" type="Button" parent="BottomNav/TabRow" unique_id=20014534]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 14
 text = "care"
-theme_override_font_sizes/font_size = 14
 
-[node name="MoreTab" type="Button" parent="BottomNav/TabRow"]
+[node name="MoreTab" type="Button" parent="BottomNav/TabRow" unique_id=1203178229]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "more"
 theme_override_font_sizes/font_size = 14
+text = "more"

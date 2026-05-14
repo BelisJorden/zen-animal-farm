@@ -24,6 +24,7 @@ var _selected_tile_pos: Vector3 = Vector3.ZERO
 
 
 func _ready() -> void:
+	FXManager.set_fx_root(animals_root)
 	placing_ui.visible = false
 	placing_ui.animal_selection_changed.connect(_on_animal_selected)
 	placing_ui.cancelled.connect(_exit_placing_mode)
@@ -163,7 +164,10 @@ func _spawn_animal(tile_pos: Vector3, animal: AnimalData) -> void:
 	var timer := Timer.new()
 	timer.wait_time = animal.coin_rate
 	timer.autostart = true
-	timer.timeout.connect(func(): EventBus.coins_earned.emit(animal.coin_amount))
+	timer.timeout.connect(func():
+		EventBus.coins_earned.emit(animal.coin_amount)
+		FXManager.spawn_coin_popup(node.global_position, animal.coin_amount)
+	)
 	node.add_child(timer)
 	_anim_spawn(node, animal.scale)
 	_anim_bob(node)
