@@ -146,6 +146,8 @@ res://
 │   │   └── tile.gd           # DEPRECATED
 │   ├── resources/
 │   │   └── animal_data.gd    # AnimalData Resource class
+│   ├── systems/
+│   │   └── fx_manager.gd     # FXManager autoload: visuele effecten (coin popup)
 │   └── autoloads/
 │       ├── GameState.gd      # coins, spirit_shards, inventory, add/remove
 │       ├── AnimalRegistry.gd # laadt alle .tres uit data/animals/, get_animal(id)
@@ -292,6 +294,7 @@ signal quest_completed(quest_id: String)
 - **EventBus autoload** voor cross-scene events
 - **GameState autoload** voor globale data (coins, inventory, farm data)
 - **AnimalRegistry autoload** — statische klasse (geen Node), preload in scripts die hem nodig hebben
+- **FXManager autoload** — Node, beheert visuele effecten; `set_fx_root(node)` aanroepen vanuit de scene die FX wil spawnen
 - **Tweens** voor alle animaties — geen AnimationPlayer voor code-driven animaties
 - Constanten in `UPPERCASE` bovenaan elk script
 - GDScript type hints waar mogelijk: `var coins: int = 0`
@@ -303,7 +306,7 @@ signal quest_completed(quest_id: String)
 - Dier idle: bob ±0.03 units op/neer, 1.1s per richting, EASE_IN_OUT SINE, loopt oneindig
 - Tile selectie: Decal fade in `modulate.a` 0→0.85 in 0.15s; deselect fade uit in 0.10s
 - Tile bezet-feedback: rode puls (scale 1→1.4→0) in 280ms, daarna verborgen
-- Coin collect: float omhoog + fade out (nog niet geïmplementeerd)
+- Coin collect: Label3D "+N" stijgt 0.6 units in 0.8s, alpha fade 1→0 na 0.4s delay (via FXManager.spawn_coin_popup)
 - Ei crack: shake + particles bij elke tap (nog niet geïmplementeerd)
 - Combineren: beide dieren naar midden, flash, nieuw dier spawnt met particles (nog niet geïmplementeerd)
 
@@ -362,6 +365,7 @@ func spend_coins(amount: int) -> bool
 | 2026-05-14 | Tile selectie flow: tap tile eerst → highlight + menu open → dier selecteren → plaatsen (niet andersom) |
 | 2026-05-14 | Tile highlight: Decal node met procedurele gaussian-circle texture (64×64 RGBA), lila, fade animatie |
 | 2026-05-14 | AnimalData.spawn_rotation toegevoegd (default 180.0) — chicken=90°, sheep=0° |
+| 2026-05-14 | FXManager autoload: coin popup via Label3D (billboard, no_depth_test, goudgeel #F0A030, font_size=45) |
 
 ---
 
