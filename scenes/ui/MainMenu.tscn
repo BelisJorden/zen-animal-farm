@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://dl6mblhtfhm0k"]
 
 [ext_resource type="Script" uid="uid://cnt2vkw2d2qm6" path="res://scripts/ui/main_menu.gd" id="1_main"]
-[ext_resource type="PackedScene" uid="uid://cbbg000en01" path="res://scenes/ui/components/Background.tscn" id="2_bg"]
+[ext_resource type="PackedScene" path="res://scenes/ui/components/Background.tscn" id="2_bg"]
 [ext_resource type="Theme" uid="uid://cbtheme001" path="res://assets/fonts/default_theme.tres" id="3_theme"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_1"]
@@ -21,7 +21,8 @@ grow_vertical = 2
 theme = ExtResource("3_theme")
 script = ExtResource("1_main")
 
-[node name="Background" parent="." instance=ExtResource("2_bg")]
+[node name="Background" parent="." unique_id=281120603 instance=ExtResource("2_bg")]
+layout_mode = 1
 
 [node name="MarginContainer" type="MarginContainer" parent="." unique_id=181697502]
 layout_mode = 1
@@ -69,7 +70,7 @@ stretch = true
 [node name="AnimalViewport" type="SubViewport" parent="MarginContainer/VBoxContainer/AnimalContainer" unique_id=246530893]
 transparent_bg = true
 handle_input_locally = false
-size = Vector2i(1072, 260)
+size = Vector2i(570, 708)
 render_target_update_mode = 4
 
 [node name="Camera3D" type="Camera3D" parent="MarginContainer/VBoxContainer/AnimalContainer/AnimalViewport" unique_id=1460332385]

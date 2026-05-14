@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="AnimalData" format=3 uid="uid://djui0kst4eiid"]
+
+[ext_resource type="Script" uid="uid://dpsb78xvwk4q3" path="res://scripts/resources/animal_data.gd" id="1_a6hn7"]
+
+[resource]
+script = ExtResource("1_a6hn7")
+id = "pig"
+display_name = "Pig"
+scene_path = "res://assets/models/animals/Pig.obj"
+color = Color(0.9450957, 0.45964688, 0.55369496, 1)
+scale = 1.0
+spawn_rotation = 90.0
+price = 2
+coin_rate = 8.0
+coin_amount = 10

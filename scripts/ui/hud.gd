@@ -11,7 +11,8 @@ const COLOR_TEXT_DARK := Color(0.28, 0.20, 0.38)
 @onready var avatar_letter:  Label          = $TopPanel/TopRow/PlayerInfo/Avatar/AvatarLetter
 @onready var name_label:     Label          = $TopPanel/TopRow/PlayerInfo/PlayerDetails/NameLabel
 @onready var level_day:      Label          = $TopPanel/TopRow/PlayerInfo/PlayerDetails/LevelDayLabel
-@onready var coin_label:     Label          = $TopPanel/TopRow/CoinCounter/CoinAmountLabel
+@onready var coin_label:     Label          = $TopPanel/TopRow/CoinCounter/CoinRow/CoinAmountLabel
+@onready var cps_label:      Label          = $TopPanel/TopRow/CoinCounter/CpsLabel
 @onready var notif_popup:    PanelContainer = $NotificationPopup
 @onready var notif_label:    Label          = $NotificationPopup/NotifLabel
 @onready var quest_bar:      PanelContainer = $QuestBar
@@ -124,6 +125,7 @@ func _tab_id(btn: Button) -> String:
 
 func _connect_signals() -> void:
 	EventBus.coins_changed.connect(_refresh_coins)
+	EventBus.coins_per_second_changed.connect(_refresh_cps)
 	EventBus.quest_progress_updated.connect(_on_quest_updated)
 	EventBus.notification_requested.connect(show_notification)
 	EventBus.placing_mode_entered.connect(func(_d): _set_placing_mode(true))
@@ -140,6 +142,10 @@ func _refresh_player_info() -> void:
 
 func _refresh_coins(amount: int) -> void:
 	coin_label.text = str(amount)
+
+
+func _refresh_cps(cps: float) -> void:
+	cps_label.text = "%.1f/sec" % cps
 
 
 func _on_quest_updated(_quest_id: String, current: int, target: int) -> void:

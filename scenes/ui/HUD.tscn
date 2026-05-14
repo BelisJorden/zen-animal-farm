@@ -65,21 +65,33 @@ text = "lv.1 . dag 1"
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="CoinCounter" type="HBoxContainer" parent="TopPanel/TopRow" unique_id=459560046]
+[node name="CoinCounter" type="VBoxContainer" parent="TopPanel/TopRow" unique_id=459560046]
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_constants/separation = 1
+
+[node name="CoinRow" type="HBoxContainer" parent="TopPanel/TopRow/CoinCounter" unique_id=459560047]
 layout_mode = 2
 theme_override_constants/separation = 5
 
-[node name="CoinIcon" type="Label" parent="TopPanel/TopRow/CoinCounter" unique_id=153822777]
+[node name="CoinIcon" type="Label" parent="TopPanel/TopRow/CoinCounter/CoinRow" unique_id=153822777]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.85, 0.22, 1)
 theme_override_font_sizes/font_size = 22
 text = "o"
 
-[node name="CoinAmountLabel" type="Label" parent="TopPanel/TopRow/CoinCounter" unique_id=100503365]
+[node name="CoinAmountLabel" type="Label" parent="TopPanel/TopRow/CoinCounter/CoinRow" unique_id=100503365]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/font_size = 20
 text = "0"
+
+[node name="CpsLabel" type="Label" parent="TopPanel/TopRow/CoinCounter" unique_id=459560048]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 0.55)
+theme_override_font_sizes/font_size = 20
+text = "0.0/sec"
+horizontal_alignment = 2
 
 [node name="NotificationPopup" type="PanelContainer" parent="." unique_id=1085399927]
 visible = false

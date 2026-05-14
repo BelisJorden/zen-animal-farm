@@ -1,6 +1,0 @@
-[gd_scene format=3 uid="uid://cbgrid00en01"]
-
-[ext_resource type="Script" uid="uid://b4v3xd6vnk4eb" path="res://scripts/world/grid.gd" id="1_grid"]
-
-[node name="Grid" type="Node3D" unique_id=1219561648]
-script = ExtResource("1_grid")

@@ -20,6 +20,10 @@ func _ready() -> void:
 	spirit_shards = 5
 	for i in 5:
 		add_to_inventory({"name": "chicken"})
+	for i in 5:
+		add_to_inventory({"name": "sheep"})
+	for i in 5:
+		add_to_inventory({"name": "pig"})
 
 
 var player_name: String = "Yumi"
@@ -49,6 +53,15 @@ func remove_from_inventory(type_name: String) -> bool:
 			EventBus.inventory_changed.emit()
 			return true
 	return false
+
+
+var _total_cps: float = 0.0
+
+
+func add_placed_animal_cps(coin_amount: int, coin_rate: float) -> void:
+	if coin_rate > 0.0:
+		_total_cps += coin_amount / coin_rate
+		EventBus.coins_per_second_changed.emit(_total_cps)
 
 
 func add_coins(amount: int) -> void:

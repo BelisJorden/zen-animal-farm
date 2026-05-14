@@ -171,6 +171,7 @@ func _spawn_animal(tile_pos: Vector3, animal: AnimalData) -> void:
 	node.add_child(timer)
 	_anim_spawn(node, animal.scale)
 	_anim_bob(node)
+	GameState.add_placed_animal_cps(animal.coin_amount, animal.coin_rate)
 
 
 func _anim_spawn(node: Node3D, target_scale: float = 1.0) -> void:

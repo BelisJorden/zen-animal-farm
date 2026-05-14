@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b2gnathn0bvps"
-path.s3tc="res://.godot/imported/SheepClaudeDesign.png-61885192b04c94a24e4797f29743f7f2.s3tc.ctex"
+uid="uid://brn2aj3i8h2ks"
+path.bptc="res://.godot/imported/SheepClaudeDesign.png-61885192b04c94a24e4797f29743f7f2.bptc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -12,12 +12,12 @@ metadata={
 [deps]
 
 source_file="res://assets/models/animals/SheepClaudeDesign.png"
-dest_files=["res://.godot/imported/SheepClaudeDesign.png-61885192b04c94a24e4797f29743f7f2.s3tc.ctex"]
+dest_files=["res://.godot/imported/SheepClaudeDesign.png-61885192b04c94a24e4797f29743f7f2.bptc.ctex"]
 
 [params]
 
 compress/mode=2
-compress/high_quality=false
+compress/high_quality=true
 compress/lossy_quality=0.7
 compress/uastc_level=0
 compress/rdo_quality_loss=0.0

@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bstqeg5t030i5"
-path.bptc="res://.godot/imported/ChickenClaudeDesign.png-3aca9ed82c77b21f7187e0d7eb9b5c35.bptc.ctex"
+uid="uid://dhvw7f3j7dpw0"
+path.bptc="res://.godot/imported/Pig.png-2177d424110ad150ce8cf7ce0c502e50.bptc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -11,8 +11,8 @@ metadata={
 
 [deps]
 
-source_file="res://assets/models/animals/ChickenClaudeDesign.png"
-dest_files=["res://.godot/imported/ChickenClaudeDesign.png-3aca9ed82c77b21f7187e0d7eb9b5c35.bptc.ctex"]
+source_file="res://assets/models/animals/Pig.png"
+dest_files=["res://.godot/imported/Pig.png-2177d424110ad150ce8cf7ce0c502e50.bptc.ctex"]
 
 [params]
 

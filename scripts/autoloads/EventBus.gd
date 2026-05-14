@@ -17,6 +17,7 @@ signal animal_returned_from_spa(animal: Node)
 # Resources
 signal coins_earned(amount: int)
 signal coins_changed(new_amount: int)
+signal coins_per_second_changed(cps: float)
 signal coins_collected(amount: int, world_pos: Vector3)
 signal spirit_shard_collected(amount: int)
 
