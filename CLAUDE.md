@@ -35,18 +35,16 @@
   - `more` — instellingen, extras
 
 ### 3. Farm grid (`scenes/world/Farm.tscn`)
-- Isometrisch 3D grid, voxel-stijl grastiles
-- Dieren staan vrij op tiles (CharacterBody3D)
-- Decor items (bomen, lantaarns, shrines) op aparte tiles
+- Isometrisch 3D grid, voxel-stijl grastiles (FarmGrid.obj uit MagicaVoxel)
+- Dieren worden gespawnd als Node3D op AnimalLayer
 - Camera: orthogonal, 45° rotatie, vaste hoogte
-- Touch: tap op tile → selectie; drag → pan camera
+- Touch: tap op tile → plaatst dier (in placing mode); drag → pan camera
 
 ### 4. Plaatsingsmodus (`scenes/ui/PlacingUI.tscn`)
 - Header: "placing · [diernaam]" + cancel knop (rood ×)
-- Dier zweeft boven geselecteerde tile, lila glow indicator
-- Onderin: horizontale scroll — "your animals · 7 unplaced" + filter knop
-- Dier-cards: voxel preview + naam, geselecteerde heeft lila border
-- Dieren: fox, crane, tanuki, cat, deer (en meer)
+- Onderin: horizontale scroll — "your animals · N unplaced" + filter knop
+- Dier-cards: kleurpreview + naam + count, geselecteerde heeft lila border
+- Tap op vrije tile → dier gespawnd; tap op bezette tile → rode puls feedback
 
 ### 5. Hatchery (`scenes/ui/Hatchery.tscn`)
 - Header: "hatchery" + back knop
@@ -73,92 +71,214 @@
 
 ### Core loop
 ```
-Dieren op farm → genereren resources (passief) →
-resources gebruiken voor: nieuwe dieren / decor / upgrades →
+Dieren op farm → genereren coins (passief via Timer) →
+coins gebruiken voor: nieuwe dieren / decor / upgrades →
 farm groeit → nieuwe farms ontgrendelen
 ```
 
 ### Valuta
-- **Coins (◎):** standaard valuta, gegenereerd door dieren
+- **Coins (◎):** standaard valuta, gegenereerd door dieren via Timer in node
 - **Spirit shards (✦):** premium / zeldzame valuta, via quests/minigames
 
 ### Dieren systeem
-- Dieren hebben een **ster-niveau** (1★ t/m 5★?)
-- **Combineren:** 2 dieren van zelfde ster → 1 dier van volgende ster
-  - Bij combineren: training gaat verloren, maar ster geeft permanente bonussen
-- **Training:** dieren individueel trainen → hogere productiviteit
-- **Spa:** dier naar spa sturen → tijdelijke productivity boost
+- Dieren gedefinieerd als `AnimalData` Resource (`.tres` in `data/animals/`)
+- Velden: `id`, `display_name`, `scene_path`, `color`, `scale`, `price`, `rarity`, `coin_rate`, `coin_amount`, `exp_gain`
+- Dieren hebben een **ster-niveau** (1★ t/m 5★, nog niet geïmplementeerd)
+- **Combineren:** 2 dieren van zelfde ster → 1 dier van volgende ster (nog niet geïmplementeerd)
+- **Training:** dieren individueel trainen → hogere productiviteit (nog niet geïmplementeerd)
+- **Spa:** dier naar spa sturen → tijdelijke productivity boost (nog niet geïmplementeerd)
 - **Rarity:** common / rare / mystic (en later: legendary)
+
+### Dieren plaatsen (geïmplementeerd)
+1. Tab `build` → `EventBus.placing_mode_entered` → PlacingUI opent
+2. Speler tikt op tile → `EventBus.tile_tapped(col, row, world_pos)`
+3. `farm.gd._on_tile_tapped`: check placing mode + vrije tile + inventory
+4. Bij vrije tile: `GameState.remove_from_inventory`, `tile_layer.occupy_tile`, `_spawn_animal`
+5. Bij bezette tile: `tile_layer.shake_tile` (rode puls, 280ms)
+6. Dier spawnt met scale-animatie (0→target in 0.3s, ease-out bounce) + bob loop
 
 ### Gacha / Hatchery
 - Eieren kopen met coins of spirit shards
 - Egg rarity bepaalt kans op zeldzame dieren
 - "Tap to crack" mechanic — meerdere taps (5 dots progress)
-- Dieren: fox, crane, tanuki, cat, deer, rabbit + legendary (dragon, unicorn, fantasy)
+- Dieren: chicken, sheep + later fox, crane, tanuki, cat, deer, rabbit, legendary
 
 ### Farms
 - Meerdere farms ontgrendelen met resources
 - Elke farm heeft andere benefits / thema?
 - Potentieel: oneindig veel farms
 
-### Minigames
-- Manier om extra resources te verdienen
-- Nog nader te bepalen welke
-
 ### Quests
 - Dagelijkse/weekly quests → "collect 3 spirit shards · 2/3"
-- Progress bar in HUD zichtbaar
+- Progress bar in HUD zichtbaar (nog niet geïmplementeerd)
 
 ---
 
 ## Mappenstructuur
 ```
 res://
+├── data/
+│   └── animals/          # AnimalData .tres resources (chicken.tres, sheep.tres, ...)
 ├── scenes/
-│   ├── animals/          # Fox.tscn, Deer.tscn, Dragon.tscn, ...
-│   ├── decor/            # SakuraTree.tscn, ShrineGate.tscn, ...
 │   ├── ui/
 │   │   ├── MainMenu.tscn
 │   │   ├── HUD.tscn
 │   │   ├── Shop.tscn
 │   │   ├── Hatchery.tscn
 │   │   ├── PlacingUI.tscn
-│   │   └── components/   # CoinCounter.tscn, AnimalCard.tscn, TabBar.tscn
+│   │   └── components/   # Background.tscn
 │   └── world/
-│       ├── Farm.tscn
-│       ├── Grid.tscn
-│       └── Tile.tscn
+│       ├── FarmScreen.tscn   # root scene: SubViewport + HUD + UILayer
+│       ├── Farm.tscn         # 3D wereld: grid, dieren, camera
+│       ├── Grid.tscn         # DEPRECATED — niet meer in gebruik
+│       └── Tile.tscn         # DEPRECATED — niet meer in gebruik
 ├── scripts/
-│   ├── animals/          # animal_base.gd, fox.gd, ...
-│   ├── ui/               # hud.gd, shop.gd, hatchery.gd, placing_ui.gd
-│   ├── world/            # farm.gd, grid.gd
-│   ├── systems/
-│   │   ├── resource_manager.gd   # coins, spirit shards
-│   │   ├── animal_manager.gd     # spawn, combine, train
-│   │   ├── save_system.gd        # ConfigFile based
-│   │   └── gacha_system.gd       # rarity rolls
+│   ├── ui/               # hud.gd, shop.gd, hatchery.gd, placing_ui.gd, main_menu.gd
+│   ├── world/
+│   │   ├── farm.gd           # hoofdlogica: input, placing, spawn
+│   │   ├── farm_grid.gd      # tile-generatie, bezetting, shake-feedback
+│   │   ├── farm_screen.gd    # overlay-systeem (open_overlay)
+│   │   ├── grid.gd           # DEPRECATED (lege stub)
+│   │   └── tile.gd           # DEPRECATED
+│   ├── resources/
+│   │   └── animal_data.gd    # AnimalData Resource class
 │   └── autoloads/
-│       ├── GameState.gd          # globale game state (autoload)
-│       └── EventBus.gd           # globale signalen (autoload)
+│       ├── GameState.gd      # coins, spirit_shards, inventory, add/remove
+│       ├── AnimalRegistry.gd # laadt alle .tres uit data/animals/, get_animal(id)
+│       └── EventBus.gd       # globale signalen
 ├── assets/
-│   ├── models/           # .glb exports uit MagicaVoxel
-│   │   ├── animals/
-│   │   └── decor/
+│   ├── models/
+│   │   ├── animals/      # ChickenClaudeDesign.obj + .png texture
+│   │   └── farm/         # FarmGrid.obj + FarmGrid.png texture
+│   ├── shaders/          # gradient_background.gdshader
 │   ├── audio/
-│   │   ├── ambient/      # rustgevende achtergrondmuziek
-│   │   └── sfx/          # tap, spawn, combineer geluiden
-│   └── fonts/            # game font (rounded, friendly)
+│   │   ├── ambient/
+│   │   └── sfx/
+│   ├── fonts/
+│   └── wireframes/       # referentie-afbeeldingen (ChatGPT voxel guides)
 ├── project.godot
 └── CLAUDE.md
 ```
 
 ---
 
+## Scene-hiërarchie (actief)
+
+### FarmScreen.tscn (root scene)
+```
+FarmScreen (Control)
+├── Background (ColorRect) — gradient shader
+├── FarmContainer (SubViewportContainer, stretch=true)
+│   └── Farm3D (SubViewport, physics_object_picking=true, size=650×1200)
+│       └── Farm (Node3D) — farm.gd
+├── HUDLayer (CanvasLayer, z=5)
+│   └── HUD
+└── UILayer (CanvasLayer, z=10)  — overlays via open_overlay()
+```
+
+### Farm.tscn
+```
+Farm (Node3D) — farm.gd
+├── WorldEnvironment
+├── Sun (DirectionalLight3D)
+├── Camera3D (orthogonal, size=11)
+├── FarmGrid (MeshInstance3D) — FarmGrid.obj, unshaded + texture
+├── TileLayer (Node3D) — farm_grid.gd
+├── AnimalLayer (Node3D) — gespawnde dieren
+└── PlacingLayer (CanvasLayer, z=2)
+    └── PlacingUI
+```
+
+---
+
+## Tile systeem
+
+### Constanten (farm_grid.gd)
+```gdscript
+GRID_SIZE   = 5
+TILE_SIZE   = 0.7          # world units per tile
+GRID_ORIGIN = Vector3(-1.75, 0, -1.75)
+```
+
+### Tile-coördinaten
+- `tile_center(col, row)` → `GRID_ORIGIN + Vector3(col*0.7 + 0.35, 0, row*0.7 + 0.35)`
+- Kolommen 0–4 (links→rechts), rijen 0–4 (voor→achter)
+
+### Area3D picking
+- Elke tile is een `Area3D` met `BoxShape3D(0.63, 0.3, 0.63)` op `y=0.1`
+- `input_ray_pickable=true`, verbonden met `input_event` signaal
+- SubViewport heeft `physics_object_picking=true` nodig
+
+### Fallback raycast (farm.gd `_handle_tap`)
+- Berekent intersectie van camera-ray met vlak `y=0.1`
+- `col = int((world.x + 1.75) / 0.7)`, idem voor row
+- Emit `EventBus.tile_tapped` als col/row binnen 0–4
+
+### Tile bezetting (farm_grid.gd)
+- `_occupied: Dictionary` — key `"col,row"`, value `true`
+- `is_tile_free(col, row) -> bool`
+- `occupy_tile(col, row)` / `free_tile(col, row)`
+- `shake_tile(col, row)` — rode BoxMesh-marker: scale puls 1→1.4→0 in 280ms
+
+---
+
+## Camera setup
+```gdscript
+# Farm camera — isometrisch orthogonaal
+camera.projection   = Camera3D.PROJECTION_ORTHOGONAL
+camera.size         = 11.0
+camera.position     = Vector3(5.66, 8, 5.66)
+camera.rotation_deg = Vector3(-45, 45, 0)
+# Kijkt exact naar (0, 0, 0) = center van het grid
+```
+
+---
+
+## EventBus signalen
+```gdscript
+# Farm / world
+signal tile_tapped(col: int, row: int, world_pos: Vector3)
+signal tile_selected(tile_pos: Vector2i)
+signal animal_placed(animal: Node)
+signal animal_removed(animal: Node)
+signal farm_unlocked(farm_id: String)
+
+# Resources
+signal coins_earned(amount: int)
+signal coins_changed(new_amount: int)
+signal coins_collected(amount: int, world_pos: Vector3)
+signal spirit_shard_collected(amount: int)
+
+# UI
+signal tab_changed(tab_name: String)
+signal placing_mode_entered(animal_data: Dictionary)
+signal placing_mode_exited()
+signal inventory_changed
+signal notification_requested(message: String)
+
+# Animals
+signal animal_combined(result_animal: Node)
+signal animal_trained(animal: Node)
+signal animal_sent_to_spa(animal: Node)
+signal animal_returned_from_spa(animal: Node)
+
+# Hatchery
+signal egg_tapped(progress: int)
+signal egg_hatched(animal_data: Dictionary)
+
+# Quests
+signal quest_progress_updated(quest_id: String, current: int, target: int)
+signal quest_completed(quest_id: String)
+```
+
+---
+
 ## Code conventies
 - **Één script per scene**, zelfde naam: `Farm.tscn` → `farm.gd`
-- **Signalen** voor communicatie tussen nodes — geen directe `get_node` referenties buiten parent-child
-- **EventBus autoload** voor cross-scene events (bv. `EventBus.animal_placed.emit(animal)`)
-- **GameState autoload** voor globale data (coins, unlocked animals, farm data)
+- **Signalen** voor communicatie tussen nodes — geen directe `get_node` buiten parent-child
+- **EventBus autoload** voor cross-scene events
+- **GameState autoload** voor globale data (coins, inventory, farm data)
+- **AnimalRegistry autoload** — statische klasse (geen Node), preload in scripts die hem nodig hebben
 - **Tweens** voor alle animaties — geen AnimationPlayer voor code-driven animaties
 - Constanten in `UPPERCASE` bovenaan elk script
 - GDScript type hints waar mogelijk: `var coins: int = 0`
@@ -166,22 +286,40 @@ res://
 ---
 
 ## Animaties & feel (prioriteit)
-- Spawn: scale van `Vector3.ZERO` naar `Vector3.ONE` in 0.3s, ease out bounce
-- Tap/select: kleine squish (1.1 scale, terug naar 1.0)
-- Coin collect: float omhoog + fade out
-- Ei crack: shake + particles bij elke tap
-- Dier idle: subtiele bob animatie (0.05 units op/neer, 2s loop)
-- Combineren: beide dieren naar midden, flash, nieuw dier spawnt met particles
+- Spawn: scale `Vector3.ZERO → Vector3.ONE * animal.scale` in 0.3s, EASE_OUT + TRANS_BACK
+- Dier idle: bob ±0.03 units op/neer, 1.1s per richting, EASE_IN_OUT SINE, loopt oneindig
+- Tile bezet-feedback: rode puls (scale 1→1.4→0) in 280ms, daarna verborgen
+- Coin collect: float omhoog + fade out (nog niet geïmplementeerd)
+- Ei crack: shake + particles bij elke tap (nog niet geïmplementeerd)
+- Combineren: beide dieren naar midden, flash, nieuw dier spawnt met particles (nog niet geïmplementeerd)
 
 ---
 
-## Camera setup
+## GameState (autoload)
 ```gdscript
-# Farm camera — isometrisch
-camera.projection = Camera3D.PROJECTION_ORTHOGONAL
-camera.rotation_degrees = Vector3(-45, 45, 0)
-camera.size = 10.0  # aanpassen op basis van grid grootte
+var coins: int                          # setter emit coins_changed
+var spirit_shards: int
+var player_name: String = "Yumi"
+var day: int = 1
+var level: int = 1
+var unplaced_animals: Array[Dictionary] # [{"type": "chicken", "id": "123_chicken"}]
+var purchased_animal_types: Array[String]
+
+func add_to_inventory(animal_data: Dictionary)   # key "name"
+func remove_from_inventory(type_name: String) -> bool
+func add_coins(amount: int)
+func spend_coins(amount: int) -> bool
 ```
+
+---
+
+## Navigatiesysteem
+- **FarmScreen.tscn** is de root scene — nooit vernietigd
+- **Farm3D** (SubViewport) draait altijd op de achtergrond
+- **UILayer** (CanvasLayer z=10): overlays (Shop, Hatchery) via `farm_screen.open_overlay(path)`
+  - Overlay sluit zichzelf via `queue_free()`
+- **HUDLayer** (CanvasLayer z=5): HUD staat altijd zichtbaar buiten de SubViewport
+- Geen `change_scene_to_file` — Farm wordt nooit opnieuw geladen
 
 ---
 
@@ -189,6 +327,7 @@ camera.size = 10.0  # aanpassen op basis van grid grootte
 - Gebruik Godot's `ConfigFile` (geen JSON — veiliger op mobile)
 - Sla op bij: elke plaatsing, aankoop, combinatie, app minimize
 - Data: coins, spirit_shards, farms[], animals[], unlocked_items[]
+- **Nog niet geïmplementeerd**
 
 ---
 
@@ -200,15 +339,20 @@ camera.size = 10.0  # aanpassen op basis van grid grootte
 | 2026-05-10 | Valuta: coins (◎) + spirit shards (✦) |
 | 2026-05-10 | Combineren = training verlies + ster bonus |
 | 2026-05-10 | Save systeem: ConfigFile |
-| 2026-05-10 | Navigatie: overlay systeem via UILayer (CanvasLayer z=10) in FarmScreen.tscn — geen change_scene_to_file zodat Farm nooit vernietigd wordt. HUD in HUDLayer (z=5) ook in FarmScreen.tscn (buiten SubViewport). Shop/Hatchery sluiten zichzelf via queue_free(). |
+| 2026-05-10 | Navigatie: overlay systeem via UILayer (CanvasLayer z=10) in FarmScreen.tscn — geen change_scene_to_file. HUD in HUDLayer (z=5). Shop/Hatchery sluiten via queue_free(). |
+| 2026-05-14 | Farm grid: enkelvoudig FarmGrid.obj mesh (MagicaVoxel export, ±1.75 world units) + unshaded material met texture |
+| 2026-05-14 | Tile systeem: GRID_SIZE=5, TILE_SIZE=0.7, GRID_ORIGIN=(-1.75,0,-1.75) — Area3D tiles dynamisch gegenereerd in farm_grid.gd |
+| 2026-05-14 | Camera: orthogonaal, size=11, positie=(5.66,8,5.66), rotatie=(-45°,45°,0°) |
+| 2026-05-14 | SubViewport: physics_object_picking=true (noodzakelijk voor Area3D input in SubViewport) |
+| 2026-05-14 | Dier-plaatsing geïmplementeerd: tile_tapped → check vrij + inventory → spawn + occupy |
 
 ---
 
 ## Nog te beslissen
-- [ ] Tile grootte (1.0 units? 1.5?)
-- [ ] Max grid grootte per farm
 - [ ] Exacte productiesnelheid per dier per ster
 - [ ] Welke minigames?
 - [ ] Farm thema's (Japans, winter, fantasy?)
 - [ ] Monetisatie model (premium / IAP / ads-free?)
 - [ ] Naam definitief: "Zen Farm" of "Zen Animal Farm"?
+- [ ] Dieren combineren: UI flow en regels
+- [ ] Save systeem implementeren
