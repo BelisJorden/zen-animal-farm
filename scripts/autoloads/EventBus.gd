@@ -4,6 +4,7 @@ extends Node
 signal animal_placed(animal: Node)
 signal animal_removed(animal: Node)
 signal tile_selected(tile_pos: Vector2i)
+signal tile_tapped(col: int, row: int, world_pos: Vector3)
 signal farm_unlocked(farm_id: String)
 
 # Animals

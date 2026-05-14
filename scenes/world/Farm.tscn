@@ -1,39 +1,50 @@
 [gd_scene format=3 uid="uid://cbfarm00en01"]
 
-[ext_resource type="Script" path="res://scripts/world/farm.gd" id="1_farm"]
-[ext_resource type="PackedScene" uid="uid://cbgrid00en01" path="res://scenes/world/Grid.tscn" id="2_grid"]
-[ext_resource type="PackedScene" uid="uid://cbplui00en01" path="res://scenes/ui/PlacingUI.tscn" id="3_placing"]
+[ext_resource type="Script" uid="uid://00f0hsr6pri2" path="res://scripts/world/farm.gd" id="1_farm"]
+[ext_resource type="ArrayMesh" uid="uid://bamlfh0kxcisq" path="res://assets/models/farm/FarmGrid.obj" id="2_mesh"]
+[ext_resource type="Script" uid="uid://bbqacvuwjjjv6" path="res://scripts/world/farm_grid.gd" id="3_farmgrid"]
+[ext_resource type="CompressedTexture2D" uid="uid://dldrwtmm4pb52" path="res://assets/models/farm/FarmGrid.png" id="4_tex"]
+[ext_resource type="PackedScene" uid="uid://cbplui00en01" path="res://scenes/ui/PlacingUI.tscn" id="5_placing"]
+
+[sub_resource type="StandardMaterial3D" id="Mat_unshaded"]
+shading_mode = 1
+albedo_texture = ExtResource("4_tex")
 
 [sub_resource type="Environment" id="Environment_1"]
 background_mode = 1
 background_color = Color(0, 0, 0, 0)
 ambient_light_source = 2
 ambient_light_color = Color(0.84, 0.88, 0.92, 1)
-ambient_light_energy = 0.85
+ambient_light_energy = 0.4
 
-[node name="Farm" type="Node3D"]
+[node name="Farm" type="Node3D" unique_id=1003214229]
 script = ExtResource("1_farm")
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=2131961335]
 environment = SubResource("Environment_1")
 
-[node name="Sun" type="DirectionalLight3D" parent="."]
+[node name="Sun" type="DirectionalLight3D" parent="." unique_id=1635328294]
 transform = Transform3D(0.866025, -0.353553, 0.353553, 0, 0.707107, 0.707107, -0.5, -0.612372, 0.612372, 0, 8, 0)
 light_color = Color(1, 0.96, 0.88, 1)
-light_energy = 1.6
+light_energy = 0.7
 shadow_enabled = true
 
-[node name="Camera3D" type="Camera3D" parent="."]
-transform = Transform3D(0.707107, -0.5, 0.5, 0, 0.707107, 0.707107, -0.707107, -0.5, 0.5, 5.66, 8.0, 5.66)
+[node name="Camera3D" type="Camera3D" parent="." unique_id=1805182331]
+transform = Transform3D(0.707107, -0.5, 0.5, 0, 0.707107, 0.707107, -0.707107, -0.5, 0.5, 5.66, 8, 5.66)
 projection = 1
-size = 8.0
+size = 11.0
 
-[node name="Grid" parent="." instance=ExtResource("2_grid")]
+[node name="FarmGrid" type="MeshInstance3D" parent="." unique_id=1756392368]
+mesh = ExtResource("2_mesh")
+surface_material_override/0 = SubResource("Mat_unshaded")
 
-[node name="Animals" type="Node3D" parent="."]
+[node name="TileLayer" type="Node3D" parent="." unique_id=1005480149]
+script = ExtResource("3_farmgrid")
 
-[node name="PlacingLayer" type="CanvasLayer" parent="."]
+[node name="AnimalLayer" type="Node3D" parent="." unique_id=1213316830]
+
+[node name="PlacingLayer" type="CanvasLayer" parent="." unique_id=444193309]
 layer = 2
 
-[node name="PlacingUI" parent="PlacingLayer" instance=ExtResource("3_placing")]
+[node name="PlacingUI" parent="PlacingLayer" unique_id=595305974 instance=ExtResource("5_placing")]
 visible = false

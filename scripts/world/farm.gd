@@ -2,13 +2,13 @@ extends Node3D
 
 const AnimalData      = preload("res://scripts/resources/animal_data.gd")
 const AnimalRegistry  = preload("res://scripts/autoloads/AnimalRegistry.gd")
-const TAP_MAX_PIXELS  := 12.0
 const PAN_SENSITIVITY := 0.012
+const TAP_MAX_PIXELS  := 12.0
 
-@onready var camera:       Camera3D  = $Camera3D
-@onready var grid:         Node3D    = $Grid
-@onready var animals_root: Node3D    = $Animals
-@onready var placing_ui              = $PlacingLayer/PlacingUI
+@onready var camera:       Camera3D = $Camera3D
+@onready var animals_root: Node3D   = $AnimalLayer
+@onready var placing_ui             = $PlacingLayer/PlacingUI
+@onready var tile_layer:   Node3D   = $TileLayer
 
 var _placing_mode     := false
 var _selected_animal: AnimalData = null
@@ -20,26 +20,13 @@ var _is_dragging := false
 
 
 func _ready() -> void:
-	_build_world_base()
 	placing_ui.visible = false
 	placing_ui.animal_selection_changed.connect(_on_animal_selected)
 	placing_ui.cancelled.connect(_exit_placing_mode)
 	EventBus.placing_mode_entered.connect(_enter_placing_mode)
 	EventBus.placing_mode_exited.connect(_exit_placing_mode)
 	EventBus.tab_changed.connect(_on_tab_changed)
-
-
-func _build_world_base() -> void:
-	var island_mat := StandardMaterial3D.new()
-	island_mat.albedo_color = Color(0.38, 0.60, 0.26)
-	island_mat.roughness    = 0.95
-	var island := MeshInstance3D.new()
-	var island_mesh := BoxMesh.new()
-	island_mesh.size = Vector3(3.4, 0.2, 3.4)
-	island.mesh = island_mesh
-	island.material_override = island_mat
-	island.position = Vector3(0.0, -0.25, 0.0)
-	add_child(island)
+	EventBus.tile_tapped.connect(_on_tile_tapped)
 
 
 # ── Input ──────────────────────────────────────────────────────────────────────
@@ -72,30 +59,28 @@ func _unhandled_input(event: InputEvent) -> void:
 		_pan(event.position)
 
 
-func _pan(screen_pos: Vector2) -> void:
-	var delta  := screen_pos - _drag_start
-	var right  := camera.global_basis.x
-	var fwd    := Vector3(-right.z, 0.0, right.x).normalized()
-	var scale  := camera.size / get_viewport().get_visible_rect().size.y
-	camera.position = _cam_start + (-right * delta.x + fwd * delta.y) * scale
-
-
 func _handle_tap(screen_pos: Vector2) -> void:
 	var origin := camera.project_ray_origin(screen_pos)
-	var end    := origin + camera.project_ray_normal(screen_pos) * 300.0
-	var query  := PhysicsRayQueryParameters3D.create(origin, end)
-	var hit    := get_world_3d().direct_space_state.intersect_ray(query)
-
-	if hit.is_empty() or not hit.collider.has_method("set_highlighted"):
+	var dir    := camera.project_ray_normal(screen_pos)
+	if abs(dir.y) < 0.001:
 		return
+	var t        := (0.1 - origin.y) / dir.y
+	var world    := origin + dir * t
+	var col      := int((world.x + 1.75) / 0.7)
+	var row      := int((world.z + 1.75) / 0.7)
+	if col < 0 or col >= 5 or row < 0 or row >= 5:
+		return
+	EventBus.tile_tapped.emit(col, row, Vector3(
+		-1.75 + col * 0.7 + 0.35, 0.0, -1.75 + row * 0.7 + 0.35
+	))
 
-	var tile = hit.collider
-	if _placing_mode:
-		_try_place(tile)
-	else:
-		grid.clear_highlights()
-		tile.set_highlighted(true, true)
-		EventBus.tile_selected.emit(tile.grid_pos)
+
+func _pan(screen_pos: Vector2) -> void:
+	var delta := screen_pos - _drag_start
+	var right := camera.global_basis.x
+	var fwd   := Vector3(-right.z, 0.0, right.x).normalized()
+	var scale := camera.size / get_viewport().get_visible_rect().size.y
+	camera.position = _cam_start + (-right * delta.x + fwd * delta.y) * scale
 
 
 # ── Placing mode ───────────────────────────────────────────────────────────────
@@ -108,7 +93,6 @@ func _enter_placing_mode(animal_dict: Dictionary) -> void:
 	_selected_animal = animal
 	placing_ui.open(animal)
 	placing_ui.visible = true
-	grid.highlight_free(true)
 	_spawn_ghost(animal)
 
 
@@ -118,7 +102,6 @@ func _exit_placing_mode() -> void:
 	_placing_mode    = false
 	_selected_animal = null
 	placing_ui.visible = false
-	grid.clear_highlights()
 	if _ghost:
 		_ghost.queue_free()
 		_ghost = null
@@ -145,18 +128,6 @@ func _spawn_ghost(animal: AnimalData) -> void:
 	_ghost.material_override = mat
 	add_child(_ghost)
 	_ghost.visible = false
-
-
-func _try_place(tile) -> void:
-	if tile.is_occupied or not _selected_animal:
-		return
-	if not GameState.remove_from_inventory(_selected_animal.id):
-		return
-	tile.is_occupied = true
-	tile.set_highlighted(false)
-	_spawn_animal(tile.position, _selected_animal)
-	EventBus.animal_placed.emit(tile)
-	_exit_placing_mode()
 
 
 func _spawn_animal(tile_pos: Vector3, animal: AnimalData) -> void:
@@ -205,6 +176,20 @@ func _anim_bob(node: Node3D) -> void:
 		.set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
 	t.tween_property(node, "position:y", base_y - 0.03, 1.1) \
 		.set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+
+
+# ── Tile tap ──────────────────────────────────────────────────────────────────
+
+func _on_tile_tapped(col: int, row: int, world_pos: Vector3) -> void:
+	if not _placing_mode or not _selected_animal:
+		return
+	if not tile_layer.is_tile_free(col, row):
+		tile_layer.shake_tile(col, row)
+		return
+	if not GameState.remove_from_inventory(_selected_animal.id):
+		return
+	tile_layer.occupy_tile(col, row)
+	_spawn_animal(world_pos, _selected_animal)
 
 
 # ── Tab handler ────────────────────────────────────────────────────────────────
