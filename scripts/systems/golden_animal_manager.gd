@@ -88,6 +88,7 @@ func _pick_and_spawn() -> void:
 # ── Apply / remove golden state ────────────────────────────────────────────────
 
 func _apply_golden() -> void:
+	_golden_animal.set_meta("is_golden", true)
 	_tint_meshes(_golden_animal)
 	_spawn_ring()
 	_spawn_countdown()
@@ -102,6 +103,7 @@ func _cleanup() -> void:
 		_pulse_tween.kill()
 		_pulse_tween = null
 	if is_instance_valid(_golden_animal):
+		_golden_animal.set_meta("is_golden", false)
 		_restore_meshes()
 		var s: float = _golden_data.scale if _golden_data else 1.0
 		_golden_animal.scale = Vector3.ONE * s

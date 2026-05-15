@@ -98,7 +98,7 @@ Flow: **tile selecteren eerst, dan dier kiezen**
 2. Als build menu nog dicht was → `EventBus.placing_mode_entered` → PlacingUI opent
 3. Speler tikt dier-card in PlacingUI → `animal_selection_changed` → `farm.gd._on_animal_selected`
 4. Tile is geselecteerd → `_place_on_selected_tile()`: inventory aftrek, tile bezet, dier spawn, highlight weg
-5. Bij bezette tile tikken: `tile_layer.shake_tile` (rode puls, 280ms), selectie ongewijzigd
+5. Bij bezette tile tikken (buiten placing mode): tap animatie op het dier (squish/spring/settle + lila burst). In placing mode: `tile_layer.shake_tile` (rode puls, 280ms)
 6. Andere tile tikken terwijl menu open: highlight verplaatst, geen plaatsing
 7. Menu sluiten: `_exit_placing_mode()` → `_clear_tile_selection()` → highlight verdwijnt
 8. Dier spawnt met scale-animatie (0→`animal.scale` in 0.3s, ease-out bounce) + bob loop
@@ -147,7 +147,7 @@ res://
 │   ├── resources/
 │   │   └── animal_data.gd    # AnimalData Resource class
 │   ├── systems/
-│   │   └── fx_manager.gd     # FXManager autoload: visuele effecten (coin popup)
+│   │   └── fx_manager.gd     # FXManager autoload: spawn_coin_popup, spawn_coin_burst, spawn_tap_burst
 │   └── autoloads/
 │       ├── GameState.gd      # coins, spirit_shards, inventory, add/remove
 │       ├── AnimalRegistry.gd # laadt alle .tres uit data/animals/, get_animal(id)
@@ -308,6 +308,7 @@ signal quest_completed(quest_id: String)
 - Tile selectie: Decal fade in `modulate.a` 0→0.85 in 0.15s; deselect fade uit in 0.10s
 - Tile bezet-feedback: rode puls (scale 1→1.4→0) in 280ms, daarna verborgen
 - Coin collect: Label3D "+N" stijgt 0.6 units in 0.8s, alpha fade 1→0 na 0.4s delay (via FXManager.spawn_coin_popup)
+- Dier tap: squish (scaleXZ×1.2, scaleY×0.7, 0.08s) → spring omhoog (scaleXZ×0.85, scaleY×1.3, +0.12 Y, 0.12s) → settle (terug naar base scale + Y, 0.10s). 1s cooldown per dier via `tap_cooldown` meta. Overgeslagen als `is_golden` meta true. Lila ♥/✦ burst via FXManager.spawn_tap_burst.
 - Ei crack: shake + particles bij elke tap (nog niet geïmplementeerd)
 - Combineren: beide dieren naar midden, flash, nieuw dier spawnt met particles (nog niet geïmplementeerd)
 
@@ -373,6 +374,7 @@ func add_placed_animal_cps(coin_amount: int, coin_rate: float)  # accumuleert CP
 | 2026-05-14 | AnimalData.image_path veld toegevoegd; PlacingUI en Shop tonen TextureRect als image_path ingesteld, anders fallback kleurblok |
 | 2026-05-15 | AnimalDetailPanel: gedeeld bottom-sheet panel (scenes/ui/components/AnimalDetailPanel.tscn + scripts/ui/animal_detail_panel.gd). Slide-in animatie vanuit onderkant (0.22s ease-out cubic). Context "shop" toont prijs + koopknop; context "placing" toont voorraadtelling + plaatsenknop. Shop animal cards openen panel via gui_input (geen inline koopknop meer). PlacingUI cards openen panel; "plaatsen" bevestigt selectie via _select_card. Rarity kleuren: common=#888780, rare=#7B5EA7, mystic=#F0A030. |
 | 2026-05-15 | Golden animal systeem: GoldenAnimalManager autoload beheert random golden spawns (3–5 min interval, max 1 actief). Gewogen selectie: common 9×, rare 3×, mystic 1×. Duur: 15 sec. Beloningen: common 50×coin_amount (10% shard), rare 100× (40% shard), mystic 200× (100% shard). Visuals via material_override goudtint + Label3D ring + countdown boven dier + pulse scale tween. Input via Area3D op dier in SubViewport (set_input_as_handled voorkomt tile-shake conflict). FXManager.spawn_coin_burst voor grote burst animatie. HUD golden indicator bar met countdown. |
+| 2026-05-15 | Tap animatie op geplaatste dieren: 3-fase squish/spring/settle tween (0.30s totaal) via `_anim_tap` in farm.gd. `_animal_at_tile` dict (key "col,row") bijhoudt welk Node3D op welke tile staat. `_bob_tweens` dict pauzeert de bob tween tijdens tap en herstart daarna. `is_golden` meta (gezet door GoldenAnimalManager) voorkomt conflict. Tap werkt ook als placing mode open is. FXManager.spawn_tap_burst: 5 lila ♥/✦ Label3D particles spatten uiteen. |
 
 ---
 
@@ -402,6 +404,8 @@ MAX_INTERVAL    = 300.0      # 5 minuten maximum wachttijd
 
 ### Technische noten
 - `node.set_meta("animal_data", animal)` gezet in `farm.gd._spawn_animal` — noodzakelijk voor rarity lookup
+- `node.set_meta("base_y", node.position.y)` gezet in `farm.gd._spawn_animal` — gebruikt door `_anim_bob` en `_anim_tap`
+- `node.set_meta("is_golden", true/false)` gezet door GoldenAnimalManager — voorkomt dat tap animatie conflicteert met golden state
 - `EventBus.animal_placed.emit(node)` geëmit na spawnen — GoldenAnimalManager bouwt zo `_placed_animals` lijst op
 - `_input_area.get_viewport()` retourneert de SubViewport (Farm3D) — correct voor `set_input_as_handled()`
 - `_tick_countdown` gebruikt `_golden_animal == null` check als stopcriteria (geen aparte tween-referentie nodig)

@@ -22,6 +22,9 @@ var _selected_tile_col: int     = -1
 var _selected_tile_row: int     = -1
 var _selected_tile_pos: Vector3 = Vector3.ZERO
 
+var _bob_tweens: Dictionary    = {}  # Node3D -> Tween
+var _animal_at_tile: Dictionary = {} # "col,row" -> Node3D
+
 
 func _ready() -> void:
 	FXManager.set_fx_root(animals_root)
@@ -138,7 +141,7 @@ func _spawn_ghost(animal: AnimalData) -> void:
 	_ghost.visible = false
 
 
-func _spawn_animal(tile_pos: Vector3, animal: AnimalData) -> void:
+func _spawn_animal(tile_pos: Vector3, animal: AnimalData) -> Node3D:
 	var node: Node3D
 	if animal.scene_path != "":
 		var res := load(animal.scene_path)
@@ -161,6 +164,7 @@ func _spawn_animal(tile_pos: Vector3, animal: AnimalData) -> void:
 	node.position = tile_pos + Vector3(0, 0.25, 0)
 	node.rotation_degrees.y = animal.spawn_rotation
 	node.set_meta("animal_data", animal)
+	node.set_meta("base_y", node.position.y)
 	animals_root.add_child(node)
 	EventBus.animal_placed.emit(node)
 	var timer := Timer.new()
@@ -174,6 +178,7 @@ func _spawn_animal(tile_pos: Vector3, animal: AnimalData) -> void:
 	_anim_spawn(node, animal.scale)
 	_anim_bob(node)
 	GameState.add_placed_animal_cps(animal.coin_amount, animal.coin_rate)
+	return node
 
 
 func _anim_spawn(node: Node3D, target_scale: float = 1.0) -> void:
@@ -184,19 +189,24 @@ func _anim_spawn(node: Node3D, target_scale: float = 1.0) -> void:
 
 
 func _anim_bob(node: Node3D) -> void:
-	var base_y := node.position.y
+	var base_y: float = node.get_meta("base_y", node.position.y)
 	var t := create_tween().set_loops()
 	t.tween_property(node, "position:y", base_y + 0.03, 1.1) \
 		.set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
 	t.tween_property(node, "position:y", base_y - 0.03, 1.1) \
 		.set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+	_bob_tweens[node] = t
 
 
 # ── Tile tap & selection ──────────────────────────────────────────────────────
 
 func _on_tile_tapped(col: int, row: int, world_pos: Vector3) -> void:
 	if not tile_layer.is_tile_free(col, row):
-		tile_layer.shake_tile(col, row)
+		var node := _animal_at_tile.get("%d,%d" % [col, row]) as Node3D
+		if node and is_instance_valid(node):
+			_anim_tap(node)
+		else:
+			tile_layer.shake_tile(col, row)
 		return
 	_selected_tile_col = col
 	_selected_tile_row = row
@@ -215,7 +225,8 @@ func _place_on_selected_tile() -> void:
 	if not GameState.remove_from_inventory(_selected_animal.id):
 		return
 	tile_layer.occupy_tile(_selected_tile_col, _selected_tile_row)
-	_spawn_animal(_selected_tile_pos, _selected_animal)
+	var placed_node := _spawn_animal(_selected_tile_pos, _selected_animal)
+	_animal_at_tile["%d,%d" % [_selected_tile_col, _selected_tile_row]] = placed_node
 	_clear_tile_selection()
 
 
@@ -226,6 +237,42 @@ func _clear_tile_selection() -> void:
 	_selected_tile_row = -1
 	tile_layer.deselect_tile()
 	EventBus.tile_deselected.emit()
+
+
+func _anim_tap(node: Node3D) -> void:
+	if node.get_meta("tap_cooldown", false) or node.get_meta("is_golden", false):
+		return
+	node.set_meta("tap_cooldown", true)
+
+	var animal: AnimalData = node.get_meta("animal_data", null)
+	var base_scale: float  = animal.scale if animal else 1.0
+	var base_y: float      = node.get_meta("base_y", node.position.y)
+	var s                  := Vector3.ONE * base_scale
+
+	var bob: Tween = _bob_tweens.get(node)
+	if bob:
+		bob.kill()
+		_bob_tweens.erase(node)
+
+	var t := node.create_tween()
+	# Phase 1: squish down
+	t.tween_property(node, "scale", Vector3(s.x * 1.2, s.y * 0.7, s.z * 1.2), 0.08) \
+		.set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_SINE)
+	t.parallel().tween_property(node, "position:y", base_y, 0.08)
+	# Phase 2: spring up
+	t.tween_property(node, "scale", Vector3(s.x * 0.85, s.y * 1.3, s.z * 0.85), 0.12) \
+		.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_SINE)
+	t.parallel().tween_property(node, "position:y", base_y + 0.12, 0.12)
+	# Phase 3: settle
+	t.tween_property(node, "scale", s, 0.10) \
+		.set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+	t.parallel().tween_property(node, "position:y", base_y, 0.10)
+	t.tween_callback(func():
+		node.set_meta("tap_cooldown", false)
+		_anim_bob(node)
+	)
+
+	FXManager.spawn_tap_burst(node.global_position)
 
 
 # ── Tab handler ────────────────────────────────────────────────────────────────

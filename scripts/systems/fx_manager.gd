@@ -69,3 +69,34 @@ func spawn_coin_burst(world_pos: Vector3, amount: int) -> void:
 		st.tween_property(star, "position", world_pos + off, 0.9).set_ease(Tween.EASE_OUT)
 		st.parallel().tween_property(star, "modulate:a", 0.0, 0.45).set_delay(0.45)
 		st.tween_callback(star.queue_free)
+
+
+func spawn_tap_burst(world_pos: Vector3) -> void:
+	if not _fx_root:
+		return
+	var symbols := ["♥", "✦", "♥", "✦", "♥"]
+	var offsets := [
+		Vector3( 0.38,  0.30,  0.0),
+		Vector3(-0.38,  0.20,  0.0),
+		Vector3( 0.0,   0.25,  0.40),
+		Vector3( 0.28,  0.15, -0.28),
+		Vector3(-0.28,  0.35, -0.10),
+	]
+	var origin := world_pos + Vector3(0, 0.55, 0)
+	for i in 5:
+		var lbl              := Label3D.new()
+		lbl.text              = symbols[i]
+		lbl.billboard         = BaseMaterial3D.BILLBOARD_ENABLED
+		lbl.no_depth_test     = true
+		lbl.modulate          = Color(0.78, 0.58, 0.95, 1.0)
+		lbl.font_size         = 30
+		lbl.pixel_size        = 0.01
+		lbl.double_sided      = true
+		lbl.top_level         = true
+		lbl.position          = origin
+		_fx_root.add_child(lbl)
+		var end_pos: Vector3 = origin + offsets[i]
+		var st := lbl.create_tween()
+		st.tween_property(lbl, "position", end_pos, 0.50).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+		st.parallel().tween_property(lbl, "modulate:a", 0.0, 0.30).set_delay(0.20)
+		st.tween_callback(lbl.queue_free)
