@@ -1,7 +1,8 @@
 extends Control
 
-const AnimalData     = preload("res://scripts/resources/animal_data.gd")
-const AnimalRegistry = preload("res://scripts/autoloads/AnimalRegistry.gd")
+const AnimalData          = preload("res://scripts/resources/animal_data.gd")
+const AnimalRegistry      = preload("res://scripts/autoloads/AnimalRegistry.gd")
+const AnimalDetailPanelScene = preload("res://scenes/ui/components/AnimalDetailPanel.tscn")
 
 const LILA      := Color(0.58, 0.44, 0.78)
 const LILA_DARK := Color(0.42, 0.31, 0.60)
@@ -44,7 +45,8 @@ const SHOP_ITEMS: Dictionary = {
 
 var _category := "decor"
 var _purchased: Array[String] = []
-var _buy_buttons: Dictionary = {}  # Button -> item Dictionary
+var _buy_buttons: Dictionary = {}   # Button -> item Dictionary
+var _detail_panel = null
 
 var _tab_active:    StyleBoxFlat
 var _tab_idle:      StyleBoxEmpty
@@ -73,6 +75,9 @@ func _ready() -> void:
 		btn.pressed.connect(func(): _select_category(cat))
 	EventBus.coins_changed.connect(_on_coins_changed)
 	_on_coins_changed(GameState.coins)
+	_detail_panel = AnimalDetailPanelScene.instantiate()
+	add_child(_detail_panel)
+	_detail_panel.action_pressed.connect(_on_detail_action)
 
 
 func _build_styles() -> void:
@@ -136,6 +141,7 @@ func _build_grid() -> void:
 				"currency":   "coin",
 				"color":      animal.color,
 				"image_path": animal.image_path,
+				"is_animal":  true,
 			}
 			item_grid.add_child(_make_card(item))
 	else:
@@ -145,8 +151,9 @@ func _build_grid() -> void:
 
 
 func _make_card(item: Dictionary) -> Control:
-	var owned:  bool = item["name"] in _purchased
-	var is_gem: bool = item["currency"] == "gem"
+	var owned:     bool = item["name"] in _purchased
+	var is_gem:    bool = item["currency"] == "gem"
+	var is_animal: bool = item.get("is_animal", false)
 
 	var card := PanelContainer.new()
 	card.add_theme_stylebox_override("panel", _card_owned if owned else _card_normal)
@@ -191,37 +198,63 @@ func _make_card(item: Dictionary) -> Control:
 	name_lbl.clip_text = true
 	vbox.add_child(name_lbl)
 
-	# price / owned
-	var btn_pad := MarginContainer.new()
-	btn_pad.add_theme_constant_override("margin_left",   8)
-	btn_pad.add_theme_constant_override("margin_right",  8)
-	btn_pad.add_theme_constant_override("margin_bottom", 8)
-	vbox.add_child(btn_pad)
+	# price / owned / tap-to-detail
+	if is_animal:
+		var btn_pad := MarginContainer.new()
+		btn_pad.add_theme_constant_override("margin_left",   8)
+		btn_pad.add_theme_constant_override("margin_right",  8)
+		btn_pad.add_theme_constant_override("margin_bottom", 8)
+		btn_pad.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		vbox.add_child(btn_pad)
 
-	if owned:
-		var lbl := Label.new()
-		lbl.text = "owned"
-		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		lbl.add_theme_font_size_override("font_size", 12)
-		lbl.add_theme_color_override("font_color", LILA)
-		btn_pad.add_child(lbl)
+		var price_lbl := Label.new()
+		price_lbl.text = "o  %d" % item["price"]
+		price_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		price_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		price_lbl.add_theme_font_size_override("font_size", 13)
+		price_lbl.add_theme_color_override("font_color", Color(0.20, 0.14, 0.06))
+		price_lbl.add_theme_stylebox_override("normal", _price_coin)
+		price_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		btn_pad.add_child(price_lbl)
+
+		# Whole card opens the detail panel
+		card.mouse_filter = Control.MOUSE_FILTER_STOP
+		card.gui_input.connect(func(e: InputEvent) -> void:
+			if (e is InputEventMouseButton and e.pressed and e.button_index == MOUSE_BUTTON_LEFT) \
+					or (e is InputEventScreenTouch and e.pressed):
+				_detail_panel.show_panel(item["name"], "shop")
+		)
 	else:
-		var price_btn := Button.new()
-		price_btn.text = ("* " if is_gem else "o ") + str(item["price"])
-		price_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		price_btn.add_theme_font_size_override("font_size", 13)
-		var txt_col := DARK if is_gem else Color(0.20, 0.14, 0.06)
-		price_btn.add_theme_color_override("font_color", txt_col)
-		var pill := _price_gem if is_gem else _price_coin
-		for state in ["normal", "hover", "pressed", "focus"]:
-			price_btn.add_theme_stylebox_override(state, pill)
-		price_btn.add_theme_stylebox_override("disabled", _price_disabled)
-		price_btn.add_theme_color_override("font_color_disabled", Color(0.50, 0.48, 0.52))
-		if not is_gem:
-			_buy_buttons[price_btn] = item
-			price_btn.disabled = GameState.coins < item["price"]
-		price_btn.pressed.connect(func(): _on_buy(item, card, btn_pad, price_btn))
-		btn_pad.add_child(price_btn)
+		var btn_pad := MarginContainer.new()
+		btn_pad.add_theme_constant_override("margin_left",   8)
+		btn_pad.add_theme_constant_override("margin_right",  8)
+		btn_pad.add_theme_constant_override("margin_bottom", 8)
+		vbox.add_child(btn_pad)
+
+		if owned:
+			var lbl := Label.new()
+			lbl.text = "owned"
+			lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			lbl.add_theme_font_size_override("font_size", 12)
+			lbl.add_theme_color_override("font_color", LILA)
+			btn_pad.add_child(lbl)
+		else:
+			var price_btn := Button.new()
+			price_btn.text = ("* " if is_gem else "o ") + str(item["price"])
+			price_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			price_btn.add_theme_font_size_override("font_size", 13)
+			var txt_col := DARK if is_gem else Color(0.20, 0.14, 0.06)
+			price_btn.add_theme_color_override("font_color", txt_col)
+			var pill := _price_gem if is_gem else _price_coin
+			for state in ["normal", "hover", "pressed", "focus"]:
+				price_btn.add_theme_stylebox_override(state, pill)
+			price_btn.add_theme_stylebox_override("disabled", _price_disabled)
+			price_btn.add_theme_color_override("font_color_disabled", Color(0.50, 0.48, 0.52))
+			if not is_gem:
+				_buy_buttons[price_btn] = item
+				price_btn.disabled = GameState.coins < item["price"]
+			price_btn.pressed.connect(func(): _on_buy(item, card, btn_pad, price_btn))
+			btn_pad.add_child(price_btn)
 
 	return card
 
@@ -248,6 +281,18 @@ func _on_coins_changed(amount: int) -> void:
 	for btn: Button in _buy_buttons:
 		var item_data: Dictionary = _buy_buttons[btn]
 		btn.disabled = amount < item_data["price"]
+
+
+func _on_detail_action(animal_id: String, context: String) -> void:
+	if context != "shop":
+		return
+	var animal: AnimalData = AnimalRegistry.get_animal(animal_id)
+	if not animal:
+		return
+	if not GameState.spend_coins(animal.price):
+		return
+	GameState.add_to_inventory({"name": animal_id})
+	_detail_panel.close()
 
 
 func _on_back_pressed() -> void:

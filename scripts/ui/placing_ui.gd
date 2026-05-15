@@ -1,7 +1,8 @@
 extends Control
 
-const AnimalData     = preload("res://scripts/resources/animal_data.gd")
-const AnimalRegistry = preload("res://scripts/autoloads/AnimalRegistry.gd")
+const AnimalData             = preload("res://scripts/resources/animal_data.gd")
+const AnimalRegistry         = preload("res://scripts/autoloads/AnimalRegistry.gd")
+const AnimalDetailPanelScene = preload("res://scenes/ui/components/AnimalDetailPanel.tscn")
 
 signal animal_selection_changed(animal: AnimalData)
 signal cancelled
@@ -17,14 +18,19 @@ const LILA   := Color(0.58, 0.44, 0.78)
 @onready var bottom_panel:  PanelContainer = $BottomPanel
 @onready var filter_btn:    Button         = $BottomPanel/Content/SubheaderRow/FilterBtn
 
-var _active_card: PanelContainer = null
-var _active_id:   String = ""
+var _active_card:  PanelContainer = null
+var _active_id:    String = ""
+var _card_map:     Dictionary = {}   # animal_id -> PanelContainer
+var _detail_panel = null
 
 
 func _ready() -> void:
 	cancel_btn.pressed.connect(func(): cancelled.emit())
 	_style_ui()
 	EventBus.inventory_changed.connect(_on_inventory_changed)
+	_detail_panel = AnimalDetailPanelScene.instantiate()
+	add_child(_detail_panel)
+	_detail_panel.action_pressed.connect(_on_detail_action)
 
 
 func open(animal: AnimalData) -> void:
@@ -79,6 +85,7 @@ func _build_cards(active_id: String) -> void:
 	for child in card_row.get_children():
 		child.queue_free()
 	_active_card = null
+	_card_map.clear()
 
 	var counts: Dictionary = {}
 	for entry in GameState.unplaced_animals:
@@ -93,6 +100,7 @@ func _build_cards(active_id: String) -> void:
 		var selected: bool = type_id == active_id and count > 0
 		var card := _make_card(animal, selected, count)
 		card_row.add_child(card)
+		_card_map[animal.id] = card
 		if selected:
 			_active_card = card
 
@@ -147,12 +155,11 @@ func _make_card(animal: AnimalData, selected: bool, count: int) -> PanelContaine
 	count_lbl.add_theme_color_override("font_color", Color(1, 1, 1, 0.9 if available else 0.35))
 	vbox.add_child(count_lbl)
 
-	if available:
-		panel.gui_input.connect(func(e: InputEvent) -> void:
-			if (e is InputEventMouseButton and e.pressed and e.button_index == MOUSE_BUTTON_LEFT) \
-			or (e is InputEventScreenTouch and e.pressed):
-				_select_card(animal, panel)
-		)
+	panel.gui_input.connect(func(e: InputEvent) -> void:
+		if (e is InputEventMouseButton and e.pressed and e.button_index == MOUSE_BUTTON_LEFT) \
+		or (e is InputEventScreenTouch and e.pressed):
+			_detail_panel.show_panel(animal.id, "placing")
+	)
 	return panel
 
 
@@ -180,11 +187,23 @@ func _on_inventory_changed() -> void:
 	_build_cards(_active_id)
 
 
+func _on_detail_action(animal_id: String, context: String) -> void:
+	if context != "placing":
+		return
+	var animal: AnimalData = AnimalRegistry.get_animal(animal_id)
+	if not animal:
+		return
+	_detail_panel.close()
+	var panel := _card_map.get(animal_id) as PanelContainer
+	_select_card(animal, panel)
+
+
 func _select_card(animal: AnimalData, panel: PanelContainer) -> void:
 	_active_id       = animal.id
 	title_label.text = "placing · " + animal.display_name
 	if _active_card:
 		_apply_card_style(_active_card, false)
 	_active_card = panel
-	_apply_card_style(panel, true)
+	if panel:
+		_apply_card_style(panel, true)
 	animal_selection_changed.emit(animal)
