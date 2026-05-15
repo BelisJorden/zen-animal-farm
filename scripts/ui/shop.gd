@@ -131,10 +131,11 @@ func _build_grid() -> void:
 	if _category == "animals":
 		for animal in AnimalRegistry.get_all():
 			var item := {
-				"name":     animal.id,
-				"price":    animal.price,
-				"currency": "coin",
-				"color":    animal.color,
+				"name":       animal.id,
+				"price":      animal.price,
+				"currency":   "coin",
+				"color":      animal.color,
+				"image_path": animal.image_path,
 			}
 			item_grid.add_child(_make_card(item))
 	else:
@@ -162,11 +163,23 @@ func _make_card(item: Dictionary) -> Control:
 	pad.add_theme_constant_override("margin_top",   8)
 	vbox.add_child(pad)
 
+	var image_path: String = item.get("image_path", "")
 	var preview := Panel.new()
 	preview.custom_minimum_size = Vector2(0, 88)
 	preview.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	preview.add_theme_stylebox_override("panel", _make_sb(item.get("color", Color.WHITE), 10))
+	var bg_color: Color = Color(0.96, 0.94, 0.92) if image_path != "" else item.get("color", Color.WHITE)
+	preview.add_theme_stylebox_override("panel", _make_sb(bg_color, 10))
 	pad.add_child(preview)
+
+	if image_path != "":
+		var tex_rect := TextureRect.new()
+		tex_rect.texture      = load(image_path)
+		tex_rect.expand_mode  = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+		tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		tex_rect.layout_mode  = 1
+		tex_rect.anchor_right  = 1.0
+		tex_rect.anchor_bottom = 1.0
+		preview.add_child(tex_rect)
 
 	# name
 	var name_lbl := Label.new()

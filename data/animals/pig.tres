@@ -13,3 +13,4 @@ spawn_rotation = 90.0
 price = 2
 coin_rate = 8.0
 coin_amount = 10
+image_path = "res://assets/models/animals/PigUI.png"

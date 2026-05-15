@@ -113,13 +113,23 @@ func _make_card(animal: AnimalData, selected: bool, count: int) -> PanelContaine
 	vbox.add_theme_constant_override("separation", 4)
 	panel.add_child(vbox)
 
-	var preview := ColorRect.new()
-	preview.custom_minimum_size = Vector2(CARD_W - 2, CARD_H - 2)
-	var col: Color               = animal.color
-	col.a                        = 1.0 if available else 0.30
-	preview.color                = col
-	preview.mouse_filter         = Control.MOUSE_FILTER_IGNORE
-	vbox.add_child(preview)
+	if animal.image_path != "":
+		var tex_rect := TextureRect.new()
+		tex_rect.custom_minimum_size = Vector2(CARD_W - 2, CARD_H - 2)
+		tex_rect.texture             = load(animal.image_path)
+		tex_rect.expand_mode         = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+		tex_rect.stretch_mode        = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		tex_rect.modulate.a          = 1.0 if available else 0.30
+		tex_rect.mouse_filter        = Control.MOUSE_FILTER_IGNORE
+		vbox.add_child(tex_rect)
+	else:
+		var preview := ColorRect.new()
+		preview.custom_minimum_size = Vector2(CARD_W - 2, CARD_H - 2)
+		var col: Color               = animal.color
+		col.a                        = 1.0 if available else 0.30
+		preview.color                = col
+		preview.mouse_filter         = Control.MOUSE_FILTER_IGNORE
+		vbox.add_child(preview)
 
 	var lbl := Label.new()
 	lbl.text                 = animal.display_name

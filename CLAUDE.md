@@ -24,7 +24,7 @@
 
 ### 2. Farm / HUD (`scenes/ui/HUD.tscn`)
 - **Links boven:** Speler avatar + naam (bv. "Yumi") + level + dag-teller
-- **Rechts boven:** Coin-teller (goud icoon + aantal)
+- **Rechts boven:** Coin-teller (goud icoon + aantal) + coins/sec indicator eronder ("1.2/sec", gedimde witte tekst)
 - **Midden links:** Floating notificatie "+3 ✦ ready" (spirit shards klaar)
 - **Onderin:** Quest/task balk — "collect 3 spirit shards · 2/3" met progress bar
 - **Bottom nav (5 tabs):**
@@ -43,7 +43,7 @@
 ### 4. Plaatsingsmodus (`scenes/ui/PlacingUI.tscn`)
 - Header: "placing · [diernaam]" + cancel knop (rood ×)
 - Onderin: horizontale scroll — "your animals · N unplaced" + filter knop
-- Dier-cards: kleurpreview + naam + count, geselecteerde heeft lila border
+- Dier-cards: afbeelding preview (TextureRect als `image_path` ingesteld, anders kleurblok) + naam + count, geselecteerde heeft lila border
 - Tap op vrije tile → dier gespawnd; tap op bezette tile → rode puls feedback
 
 ### 5. Hatchery (`scenes/ui/Hatchery.tscn`)
@@ -59,7 +59,8 @@
 - Header: "shop" + back + coin teller
 - Category tabs: `decor` (actief, zwart pill) / `tiles` / `animals` / `seeds` / `bundles`
 - **Featured banner:** "WEEKLY MYSTERY — shrine bundle" (lila card, grote afbeelding, prijs knop)
-- **Grid:** 3 kolommen, items met voxel preview + naam + prijs
+- **Grid:** 3 kolommen, items met preview + naam + prijs
+  - Animal-cards: afbeelding (TextureRect op lichte achtergrond als `image_path` ingesteld, anders kleurblok)
   - Coin-prijs: ◎ icoon + getal
   - Gem-prijs: ✦ icoon + getal (lila)
   - Gekochte items: lila border highlight
@@ -82,7 +83,8 @@ farm groeit → nieuwe farms ontgrendelen
 
 ### Dieren systeem
 - Dieren gedefinieerd als `AnimalData` Resource (`.tres` in `data/animals/`)
-- Velden: `id`, `display_name`, `scene_path`, `color`, `scale`, `spawn_rotation`, `price`, `rarity`, `coin_rate`, `coin_amount`, `exp_gain`
+- Velden: `id`, `display_name`, `scene_path`, `image_path`, `color`, `scale`, `spawn_rotation`, `price`, `rarity`, `coin_rate`, `coin_amount`, `exp_gain`
+- `image_path`: optioneel pad naar UI-afbeelding (`res://assets/models/animals/...`); wordt getoond als `TextureRect` in PlacingUI en Shop; lege string → fallback kleurblok
 - Dieren hebben een **ster-niveau** (1★ t/m 5★, nog niet geïmplementeerd)
 - **Combineren:** 2 dieren van zelfde ster → 1 dier van volgende ster (nog niet geïmplementeerd)
 - **Training:** dieren individueel trainen → hogere productiviteit (nog niet geïmplementeerd)
@@ -105,7 +107,7 @@ Flow: **tile selecteren eerst, dan dier kiezen**
 - Eieren kopen met coins of spirit shards
 - Egg rarity bepaalt kans op zeldzame dieren
 - "Tap to crack" mechanic — meerdere taps (5 dots progress)
-- Dieren: chicken, sheep + later fox, crane, tanuki, cat, deer, rabbit, legendary
+- Dieren: chicken, sheep, pig + later fox, crane, tanuki, cat, deer, rabbit, legendary
 
 ### Farms
 - Meerdere farms ontgrendelen met resources
@@ -134,7 +136,6 @@ res://
 │   └── world/
 │       ├── FarmScreen.tscn   # root scene: SubViewport + HUD + UILayer
 │       ├── Farm.tscn         # 3D wereld: grid, dieren, camera
-│       ├── Grid.tscn         # DEPRECATED — niet meer in gebruik
 │       └── Tile.tscn         # DEPRECATED — niet meer in gebruik
 ├── scripts/
 │   ├── ui/               # hud.gd, shop.gd, hatchery.gd, placing_ui.gd, main_menu.gd
@@ -142,7 +143,6 @@ res://
 │   │   ├── farm.gd           # hoofdlogica: input, placing, spawn
 │   │   ├── farm_grid.gd      # tile-generatie, bezetting, shake-feedback
 │   │   ├── farm_screen.gd    # overlay-systeem (open_overlay)
-│   │   ├── grid.gd           # DEPRECATED (lege stub)
 │   │   └── tile.gd           # DEPRECATED
 │   ├── resources/
 │   │   └── animal_data.gd    # AnimalData Resource class
@@ -261,6 +261,7 @@ signal farm_unlocked(farm_id: String)
 # Resources
 signal coins_earned(amount: int)
 signal coins_changed(new_amount: int)
+signal coins_per_second_changed(cps: float)
 signal coins_collected(amount: int, world_pos: Vector3)
 signal spirit_shard_collected(amount: int)
 
@@ -326,6 +327,7 @@ func add_to_inventory(animal_data: Dictionary)   # key "name"
 func remove_from_inventory(type_name: String) -> bool
 func add_coins(amount: int)
 func spend_coins(amount: int) -> bool
+func add_placed_animal_cps(coin_amount: int, coin_rate: float)  # accumuleert CPS, emit coins_per_second_changed
 ```
 
 ---
@@ -364,8 +366,11 @@ func spend_coins(amount: int) -> bool
 | 2026-05-14 | Dier-plaatsing geïmplementeerd: tile_tapped → check vrij + inventory → spawn + occupy |
 | 2026-05-14 | Tile selectie flow: tap tile eerst → highlight + menu open → dier selecteren → plaatsen (niet andersom) |
 | 2026-05-14 | Tile highlight: Decal node met procedurele gaussian-circle texture (64×64 RGBA), lila, fade animatie |
-| 2026-05-14 | AnimalData.spawn_rotation toegevoegd (default 180.0) — chicken=90°, sheep=0° |
+| 2026-05-14 | AnimalData.spawn_rotation toegevoegd (default 180.0) — chicken=90°, sheep=90°, pig=90° |
 | 2026-05-14 | FXManager autoload: coin popup via Label3D (billboard, no_depth_test, goudgeel #F0A030, font_size=45) |
+| 2026-05-14 | Pig dier toegevoegd (pig.tres, Pig.obj/png); start-inventory: 5 chickens + 5 sheep + 5 pigs |
+| 2026-05-14 | HUD: coins/sec indicator onder coin-teller (CoinCounter → VBoxContainer met CoinRow + CpsLabel); GameState.add_placed_animal_cps() accumuleert bij spawnen |
+| 2026-05-14 | AnimalData.image_path veld toegevoegd; PlacingUI en Shop tonen TextureRect als image_path ingesteld, anders fallback kleurblok |
 
 ---
 

@@ -12,3 +12,4 @@ class_name AnimalData
 @export var coin_rate: float = 5.0
 @export var coin_amount: int = 1
 @export var exp_gain: float = 1.0
+@export var image_path: String
