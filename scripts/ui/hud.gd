@@ -23,6 +23,11 @@ const COLOR_TEXT_DARK := Color(0.28, 0.20, 0.38)
 var _tabs: Array[Button] = []
 var _active_tab: String = "farm"
 
+var _golden_bar:       PanelContainer = null
+var _golden_cnt_label: Label          = null
+var _golden_remaining: int            = 0
+var _golden_tick:      Timer          = null
+
 
 func _ready() -> void:
 	_tabs = [
@@ -36,6 +41,7 @@ func _ready() -> void:
 	_style_progress_bar()
 	_setup_tabs()
 	_connect_signals()
+	_setup_golden_bar()
 	_refresh_player_info()
 	_refresh_coins(GameState.coins)
 	_set_active_tab("farm")
@@ -130,6 +136,9 @@ func _connect_signals() -> void:
 	EventBus.notification_requested.connect(show_notification)
 	EventBus.placing_mode_entered.connect(func(_d): _set_placing_mode(true))
 	EventBus.placing_mode_exited.connect(func(): _set_placing_mode(false))
+	EventBus.golden_animal_spawned.connect(_on_golden_spawned)
+	EventBus.golden_animal_collected.connect(func(_c, _s): _hide_golden_bar())
+	EventBus.golden_animal_expired.connect(_hide_golden_bar)
 
 
 # ── Data refresh ───────────────────────────────────────────────────────────────
@@ -190,3 +199,83 @@ func _open_overlay(scene_path: String) -> void:
 func _set_placing_mode(active: bool) -> void:
 	quest_bar.visible  = not active
 	bottom_nav.visible = not active
+
+
+# ── Golden animal indicator ────────────────────────────────────────────────────
+
+func _setup_golden_bar() -> void:
+	_golden_bar = PanelContainer.new()
+	_golden_bar.visible = false
+
+	var s := StyleBoxFlat.new()
+	s.bg_color                   = Color(0.78, 0.55, 0.06, 0.93)
+	s.corner_radius_top_left     = 14
+	s.corner_radius_top_right    = 14
+	s.corner_radius_bottom_left  = 14
+	s.corner_radius_bottom_right = 14
+	s.content_margin_left        = 14
+	s.content_margin_right       = 14
+	s.content_margin_top         = 7
+	s.content_margin_bottom      = 7
+	_golden_bar.add_theme_stylebox_override("panel", s)
+
+	var hbox := HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 7)
+
+	var icon := Label.new()
+	icon.text = "✦ golden animal"
+	icon.add_theme_color_override("font_color", Color(1.0, 0.97, 0.75))
+	icon.add_theme_font_size_override("font_size", 17)
+
+	var sep := Label.new()
+	sep.text = "·"
+	sep.add_theme_color_override("font_color", Color(1.0, 0.97, 0.75, 0.6))
+	sep.add_theme_font_size_override("font_size", 17)
+
+	_golden_cnt_label = Label.new()
+	_golden_cnt_label.text = "15s"
+	_golden_cnt_label.add_theme_color_override("font_color", Color(1.0, 0.97, 0.75))
+	_golden_cnt_label.add_theme_font_size_override("font_size", 17)
+
+	hbox.add_child(icon)
+	hbox.add_child(sep)
+	hbox.add_child(_golden_cnt_label)
+	_golden_bar.add_child(hbox)
+
+	# Centered horizontally, just below the top panel (~90px from top)
+	_golden_bar.set_anchors_preset(Control.PRESET_TOP_WIDE)
+	_golden_bar.offset_left   = 155
+	_golden_bar.offset_right  = -155
+	_golden_bar.offset_top    = 90
+	_golden_bar.offset_bottom = 90
+	add_child(_golden_bar)
+
+	_golden_tick          = Timer.new()
+	_golden_tick.one_shot = false
+	_golden_tick.wait_time = 1.0
+	_golden_tick.timeout.connect(_on_golden_tick)
+	add_child(_golden_tick)
+
+
+func _on_golden_spawned(_animal: Node, _farm_id: String) -> void:
+	_golden_remaining = int(GoldenAnimalManager.GOLDEN_DURATION)
+	_golden_cnt_label.text = "%ds" % _golden_remaining
+	_golden_bar.visible    = true
+	_golden_bar.modulate.a = 0.0
+	var t := create_tween()
+	t.tween_property(_golden_bar, "modulate:a", 1.0, 0.30)
+	_golden_tick.start()
+
+
+func _on_golden_tick() -> void:
+	_golden_remaining = max(0, _golden_remaining - 1)
+	_golden_cnt_label.text = "%ds" % _golden_remaining
+	if _golden_remaining == 0:
+		_golden_tick.stop()
+
+
+func _hide_golden_bar() -> void:
+	_golden_tick.stop()
+	var t := create_tween()
+	t.tween_property(_golden_bar, "modulate:a", 0.0, 0.30)
+	t.tween_callback(func(): _golden_bar.visible = false)

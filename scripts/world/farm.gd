@@ -160,7 +160,9 @@ func _spawn_animal(tile_pos: Vector3, animal: AnimalData) -> void:
 		node = mesh_inst
 	node.position = tile_pos + Vector3(0, 0.25, 0)
 	node.rotation_degrees.y = animal.spawn_rotation
+	node.set_meta("animal_data", animal)
 	animals_root.add_child(node)
+	EventBus.animal_placed.emit(node)
 	var timer := Timer.new()
 	timer.wait_time = animal.coin_rate
 	timer.autostart = true

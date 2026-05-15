@@ -371,6 +371,39 @@ func add_placed_animal_cps(coin_amount: int, coin_rate: float)  # accumuleert CP
 | 2026-05-14 | Pig dier toegevoegd (pig.tres, Pig.obj/png); start-inventory: 5 chickens + 5 sheep + 5 pigs |
 | 2026-05-14 | HUD: coins/sec indicator onder coin-teller (CoinCounter → VBoxContainer met CoinRow + CpsLabel); GameState.add_placed_animal_cps() accumuleert bij spawnen |
 | 2026-05-14 | AnimalData.image_path veld toegevoegd; PlacingUI en Shop tonen TextureRect als image_path ingesteld, anders fallback kleurblok |
+| 2026-05-15 | Golden animal systeem: GoldenAnimalManager autoload beheert random golden spawns (3–5 min interval, max 1 actief). Gewogen selectie: common 9×, rare 3×, mystic 1×. Duur: 15 sec. Beloningen: common 50×coin_amount (10% shard), rare 100× (40% shard), mystic 200× (100% shard). Visuals via material_override goudtint + Label3D ring + countdown boven dier + pulse scale tween. Input via Area3D op dier in SubViewport (set_input_as_handled voorkomt tile-shake conflict). FXManager.spawn_coin_burst voor grote burst animatie. HUD golden indicator bar met countdown. |
+
+---
+
+## Golden animal systeem (GoldenAnimalManager)
+
+### Constanten
+```gdscript
+GOLDEN_DURATION = 15.0       # seconden actief
+MIN_INTERVAL    = 180.0      # 3 minuten minimum wachttijd
+MAX_INTERVAL    = 300.0      # 5 minuten maximum wachttijd
+```
+
+### Gewichten & beloningen
+| Rarity  | Selectiekans | Coin multiplier | Shard kans |
+|---------|-------------|-----------------|------------|
+| common  | 9 (3× rare) | 50 × coin_amount | 10%       |
+| rare    | 3 (3× mystic)| 100 × coin_amount| 40%       |
+| mystic  | 1           | 200 × coin_amount| 100%      |
+
+### Flow
+1. `_spawn_timer` loopt af (3–5 min) → `_try_spawn()` → `_pick_and_spawn()`
+2. Dier krijgt: goudgele material_override, Label3D ring (4× ✦ op 0.5r), countdown Label3D boven hoofd (y=1.2), pulse scale animatie, Area3D voor input (0.8×1.2×0.8 box)
+3. `EventBus.golden_animal_spawned` → HUD toont golden bar met countdown
+4. Aantikken: `Area3D.input_event` → `set_input_as_handled()` → `_collect()` → beloningen, coin burst, cleanup
+5. Timeout: `_on_expired()` → cleanup, nieuw interval
+6. Cleanup: materials herstellen, scale herstellen, children vrijmaken, timers stoppen
+
+### Technische noten
+- `node.set_meta("animal_data", animal)` gezet in `farm.gd._spawn_animal` — noodzakelijk voor rarity lookup
+- `EventBus.animal_placed.emit(node)` geëmit na spawnen — GoldenAnimalManager bouwt zo `_placed_animals` lijst op
+- `_input_area.get_viewport()` retourneert de SubViewport (Farm3D) — correct voor `set_input_as_handled()`
+- `_tick_countdown` gebruikt `_golden_animal == null` check als stopcriteria (geen aparte tween-referentie nodig)
 
 ---
 
