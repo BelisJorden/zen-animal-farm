@@ -23,8 +23,7 @@
 - Achtergrond: gradient lila → zacht oranje (gebruik WorldEnvironment)
 
 ### 2. Farm / HUD (`scenes/ui/HUD.tscn`)
-- **Links boven:** Speler avatar + naam (bv. "Yumi") + level + dag-teller
-- **Rechts boven:** Coin-teller (goud icoon + aantal) + coins/sec indicator eronder ("1.2/sec", gedimde witte tekst)
+- **Rechts boven:** Coin-teller (◎ goud icoon + aantal) + coins/sec indicator eronder ("1.2/sec", gedimde witte tekst) — VBoxContainer, anchor right, 16px marge van rand. Geen avatar/naam/level/dag meer.
 - **Midden links:** Floating notificatie "+3 ✦ ready" (spirit shards klaar)
 - **Onderin:** Quest/task balk — "collect 3 spirit shards · 2/3" met progress bar
 - **Bottom nav (5 tabs):**
@@ -49,12 +48,13 @@
 - Tap op vrije tile → dier gespawnd; tap op bezette tile → rode puls feedback
 
 ### 5. Hatchery (`scenes/ui/Hatchery.tscn`)
-- Header: "hatchery" + back knop
-- Centraal: voxel ei model (groot, roterend)
-- Tekst: "almost there..." / "tap × tap × tap"
-- Progress: 5 dots (●●●○○ stijl)
-- Rarity selector: `common` / `rare` (actief, lila) / `mystic`
-- Primaire knop: "tap to crack ✦ 3"
+- Header: "hatchery" + back knop links + spirit shard teller rechts ("✦ N" goudgeel, ShardCounter node)
+- Centraal: voxel ei model (groot, shaking animatie per tap)
+- Tekst: "almost there..." / "one more tap!" / "it hatched!"
+- Progress: 5 dots (●●●○○ stijl), vult per tap
+- Rarity selector: `common` / `rare` / `mystic` — bepaalt minimale rarity van roll + shardkosten
+- Primaire knop: "tap to crack ✦ N" (N = kosten op basis van geselecteerde rarity)
+- Kosten: common ✦3, rare ✦8, mystic ✦20 — afgetrokken bij eerste tap
 - Achtergrond: lila → zacht roze gradient
 
 ### 6. Shop (`scenes/ui/Shop.tscn`)
@@ -105,11 +105,18 @@ Flow: **tile selecteren eerst, dan dier kiezen**
 7. Menu sluiten: `_exit_placing_mode()` → `_clear_tile_selection()` → highlight verdwijnt
 8. Dier spawnt met scale-animatie (0→`animal.scale` in 0.3s, ease-out bounce) + bob loop
 
-### Gacha / Hatchery
-- Eieren kopen met coins of spirit shards
-- Egg rarity bepaalt kans op zeldzame dieren
-- "Tap to crack" mechanic — meerdere taps (5 dots progress)
-- Dieren: chicken, sheep, pig + later fox, crane, tanuki, cat, deer, rabbit, legendary
+### Gacha / Hatchery (geïmplementeerd)
+- Spirit shards betalen per ei op basis van geselecteerde rarity
+- 5 taps nodig → ei kraakt → gacha roll → dier verschijnt met reveal animatie
+- Reveal: dier naam (36pt) + rarity badge in rarity-kleur + image; fade-in 0.3s → 2.5s → fade-out
+- `_roll_rarity()` houdt rekening met geselecteerde UI-rarity als minimum:
+  - `common` geselecteerd: 70% common / 25% rare / 5% mystic
+  - `rare` geselecteerd: 80% rare / 20% mystic (nooit common)
+  - `mystic` geselecteerd: altijd mystic
+- `_pick_animal(rarity)` kiest random uit AnimalRegistry gefilterd op rarity; fallback naar common
+- Dier wordt toegevoegd aan inventory via `GameState.add_to_inventory({"name": id})`
+- `EventBus.animal_hatched(animal_id, rarity)` geëmit na elk ei
+- Huidige dieren: chicken (common), pig (common), sheep (rare), dragon (mystic)
 
 ### Farms
 - Meerdere farms ontgrendelen met resources
@@ -271,6 +278,7 @@ signal coins_changed(new_amount: int)
 signal coins_per_second_changed(cps: float)
 signal coins_collected(amount: int, world_pos: Vector3)
 signal spirit_shard_collected(amount: int)
+signal shards_changed(amount: int)
 
 # UI
 signal tab_changed(tab_name: String)
@@ -288,6 +296,7 @@ signal animal_returned_from_spa(animal: Node)
 # Hatchery
 signal egg_tapped(progress: int)
 signal egg_hatched(animal_data: Dictionary)
+signal animal_hatched(animal_id: String, rarity: String)
 
 # Quests
 signal quest_progress_updated(quest_id: String, current: int, target: int)
@@ -316,27 +325,27 @@ signal quest_completed(quest_id: String)
 - Tile bezet-feedback: rode puls (scale 1→1.4→0) in 280ms, daarna verborgen
 - Coin collect: Label3D "+N" stijgt 0.6 units in 0.8s, alpha fade 1→0 na 0.4s delay (via FXManager.spawn_coin_popup)
 - Dier tap: squish (scaleXZ×1.2, scaleY×0.7, 0.08s) → spring omhoog (scaleXZ×0.85, scaleY×1.3, +0.12 Y, 0.12s) → settle (terug naar base scale + Y, 0.10s). 1s cooldown per dier via `tap_cooldown` meta. Overgeslagen als `is_golden` of `tap_cooldown` meta true. Lila ♥/✦ burst via FXManager.spawn_tap_burst.
-- Ei crack: shake + particles bij elke tap (nog niet geïmplementeerd)
+- Ei crack: shake (±11px x-as, 4 stappen, 0.20s) per tap; 5e tap → scale 1→1.25→0 (0.40s) → gacha reveal overlay
 - Combineren: beide dieren naar midden, flash, nieuw dier spawnt met particles (nog niet geïmplementeerd)
 
 ---
 
 ## GameState (autoload)
 ```gdscript
-var coins: int                          # setter emit coins_changed
-var spirit_shards: int
-var player_name: String = "Yumi"
-var day: int = 1
-var level: int = 1
+var coins: int                          # setter emit coins_changed + EventBus.coins_changed
+var spirit_shards: int                  # setter emit shards_changed + EventBus.shards_changed; start 25
 var unplaced_animals: Array[Dictionary] # [{"type": "chicken", "id": "123_chicken"}]
 var purchased_animal_types: Array[String]
 
-func add_to_inventory(animal_data: Dictionary)   # key "name"
+func add_to_inventory(animal_data: Dictionary)   # key "name", emit inventory_changed
 func remove_from_inventory(type_name: String) -> bool
 func add_coins(amount: int)
 func spend_coins(amount: int) -> bool
+func spend_shards(amount: int) -> bool           # alias voor spend_spirit_shards
+func spend_spirit_shards(amount: int) -> bool
 func add_placed_animal_cps(coin_amount: int, coin_rate: float)  # accumuleert CPS, emit coins_per_second_changed
 ```
+Verwijderd: `player_name`, `day`, `level` — niet meer gebruikt.
 
 ---
 
@@ -394,6 +403,12 @@ func add_placed_animal_cps(coin_amount: int, coin_rate: float)  # accumuleert CP
 | 2026-05-16 | BottomNav tab "care" hernoemd naar "shop" — opent Shop overlay via `farm_screen.open_overlay("res://scenes/ui/Shop.tscn")`. BottomNav blijft altijd zichtbaar, ook in placing mode (geen `visible=false` meer bij placing). |
 | 2026-05-16 | Tile highlight vervangen: Decal (werkt niet op Android Forward+) → MeshInstance3D QuadMesh (werkt ook niet betrouwbaar) → 2D CanvasLayer met Node2D `_draw()`. `TileHighlight2D` in `HighlightLayer` (CanvasLayer z=5) tekent lila ruit via `Camera3D.unproject_position()`. `_process()` roept `queue_redraw()` elke frame aan zodat ruit camera-pan volgt. |
 | 2026-05-16 | Golden animal `is_instance_valid` fix: Android double-events lieten tweede invocatie crashen op `_input_area.get_viewport()` nadat `_cleanup()` `_input_area=null` had gezet. Fix: `is_instance_valid(_input_area)` guard bovenaan de input_event lambda. |
+| 2026-05-16 | HUD vereenvoudigd: TopPanel (naam, avatar, level, dag) volledig verwijderd. Vervangen door compacte CoinCounter VBoxContainer rechtsbovenin (anchor_right=1.0, offset_right=-16, offset_top=16). `_refresh_player_info()` verwijderd uit hud.gd. |
+| 2026-05-16 | player_name, day, level verwijderd uit GameState en SaveSystem — nergens meer gebruikt. MainMenu onboarding (naam-invoer flow) verwijderd; begin-knop laadt save direct of past defaults toe. |
+| 2026-05-16 | Hatchery gacha systeem geïmplementeerd: `_roll_rarity()` houdt rekening met UI-selectie als minimum rarity. `_pick_animal(rarity)` filtert AnimalRegistry op rarity met fallback naar common. Reveal overlay: naam + rarity badge + image, fade in/out met 2.5s zichtbaar. Shardkosten common ✦3 / rare ✦8 / mystic ✦20, afgetrokken bij eerste tap. "niet genoeg ✦" melding als saldo tekortkomt. |
+| 2026-05-16 | EventBus signalen toegevoegd: `animal_hatched(animal_id, rarity)` na elk ei; `shards_changed(amount)` bij elke shard-wijziging (via spirit_shards setter in GameState). |
+| 2026-05-16 | Hatchery spirit shard teller: ShardCounter (CenterContainer) in HeaderBar rechts, vervangt lege HeaderSpacer. ShardLabel toont "✦ N" in goudgeel, geupdate via EventBus.shards_changed. |
+| 2026-05-16 | Dier rarity waarden expliciet gezet in .tres: chicken=common, pig=common, sheep=rare, dragon=mystic (was al correct). |
 
 ---
 
