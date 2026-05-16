@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="AnimalData" format=3 uid="uid://bfpcs4rn0y0da"]
+
+[ext_resource type="Script" uid="uid://dpsb78xvwk4q3" path="res://scripts/resources/animal_data.gd" id="1_8l7r4"]
+
+[resource]
+script = ExtResource("1_8l7r4")
+id = "dragon"
+display_name = "dragon"
+scene_path = "res://assets/models/animals/Dragon.obj"
+color = Color(0.04773522, 0.2507557, 4.813075e-08, 1)
+scale = 0.8
+spawn_rotation = 90.0
+price = 1
+rarity = "mystic"
+coin_rate = 10.0
+coin_amount = 100
+image_path = "res://assets/models/animals/DragonUI.png"

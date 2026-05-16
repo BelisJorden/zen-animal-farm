@@ -5,6 +5,7 @@
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_1"]
 shader = ExtResource("1_shader")
 shader_parameter/color_top    = Color(0.769, 0.682, 0.867, 1.0)
+shader_parameter/color_mid    = Color(0.855, 0.759, 0.795, 1.0)
 shader_parameter/color_bottom = Color(0.941, 0.835, 0.722, 1.0)
 
 [node name="Background" type="ColorRect"]

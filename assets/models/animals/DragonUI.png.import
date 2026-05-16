@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bu5s60j3iqj7q"
-path.bptc="res://.godot/imported/Sheep.png-38dda9a12817885590218c6bd44ad726.bptc.ctex"
+uid="uid://buiugg8rfenl"
+path.bptc="res://.godot/imported/DragonUI.png-bf0ee8f6dbe5f90fa2d8b7f01d2bd7b2.bptc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -11,8 +11,8 @@ metadata={
 
 [deps]
 
-source_file="res://assets/models/animals/Sheep.png"
-dest_files=["res://.godot/imported/Sheep.png-38dda9a12817885590218c6bd44ad726.bptc.ctex"]
+source_file="res://assets/models/animals/DragonUI.png"
+dest_files=["res://.godot/imported/DragonUI.png-bf0ee8f6dbe5f90fa2d8b7f01d2bd7b2.bptc.ctex"]
 
 [params]
 

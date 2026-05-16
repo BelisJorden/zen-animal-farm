@@ -11,6 +11,5 @@ color = Color(0.9450957, 0.45964688, 0.55369496, 1)
 scale = 1.0
 spawn_rotation = 90.0
 price = 2
-coin_rate = 8.0
-coin_amount = 10
+coin_amount = 2
 image_path = "res://assets/models/animals/PigUI.png"

@@ -3,19 +3,17 @@
 [ext_resource type="Script" uid="uid://00f0hsr6pri2" path="res://scripts/world/farm.gd" id="1_farm"]
 [ext_resource type="ArrayMesh" uid="uid://bamlfh0kxcisq" path="res://assets/models/farm/FarmGrid.obj" id="2_mesh"]
 [ext_resource type="Script" uid="uid://bbqacvuwjjjv6" path="res://scripts/world/farm_grid.gd" id="3_farmgrid"]
-[ext_resource type="CompressedTexture2D" uid="uid://dldrwtmm4pb52" path="res://assets/models/farm/FarmGrid.png" id="4_tex"]
+[ext_resource type="Texture2D" uid="uid://dldrwtmm4pb52" path="res://assets/models/farm/FarmGrid.png" id="4_tex"]
 [ext_resource type="PackedScene" uid="uid://cbplui00en01" path="res://scenes/ui/PlacingUI.tscn" id="5_placing"]
-
-[sub_resource type="StandardMaterial3D" id="Mat_unshaded"]
-shading_mode = 1
-albedo_texture = ExtResource("4_tex")
-
 [sub_resource type="Environment" id="Environment_1"]
 background_mode = 1
 background_color = Color(0, 0, 0, 0)
 ambient_light_source = 2
 ambient_light_color = Color(0.84, 0.88, 0.92, 1)
 ambient_light_energy = 0.4
+
+[sub_resource type="StandardMaterial3D" id="Mat_unshaded"]
+albedo_texture = ExtResource("4_tex")
 
 [node name="Farm" type="Node3D" unique_id=1003214229]
 script = ExtResource("1_farm")
@@ -30,9 +28,9 @@ light_energy = 0.7
 shadow_enabled = true
 
 [node name="Camera3D" type="Camera3D" parent="." unique_id=1805182331]
-transform = Transform3D(0.707107, -0.5, 0.5, 0, 0.707107, 0.707107, -0.707107, -0.5, 0.5, 5.66, 8, 5.66)
+transform = Transform3D(0.70710695, -0.49999964, 0.49999985, 0, 0.7071063, 0.7071066, -0.70710695, -0.49999964, 0.49999985, 5.7, 6.8, 5.66)
 projection = 1
-size = 11.0
+size = 12.0
 
 [node name="FarmGrid" type="MeshInstance3D" parent="." unique_id=1756392368]
 mesh = ExtResource("2_mesh")

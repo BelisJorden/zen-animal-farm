@@ -27,6 +27,14 @@ var _animal_at_tile: Dictionary = {} # "col,row" -> Node3D
 
 
 func _ready() -> void:
+	var island_scene = load("res://assets/models/farm/FarmIslandBig.glb")
+	var island = island_scene.instantiate()
+	island.name = "FarmIsland"
+	island.scale = Vector3(1, 1, 1)
+	island.position.y = -4.0
+	island.position.x = 0.1
+	add_child(island)
+	move_child(island, 0)
 	FXManager.set_fx_root(animals_root)
 	placing_ui.visible = false
 	placing_ui.animal_selection_changed.connect(_on_animal_selected)
@@ -161,7 +169,7 @@ func _spawn_animal(tile_pos: Vector3, animal: AnimalData) -> Node3D:
 		mat.albedo_color = animal.color
 		mesh_inst.material_override = mat
 		node = mesh_inst
-	node.position = tile_pos + Vector3(0, 0.25, 0)
+	node.position = tile_pos + Vector3(0.20, 0.25, 0.12)
 	node.rotation_degrees.y = animal.spawn_rotation
 	node.set_meta("animal_data", animal)
 	node.set_meta("base_y", node.position.y)

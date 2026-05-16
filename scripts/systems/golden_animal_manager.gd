@@ -238,6 +238,8 @@ func _add_input_area() -> void:
 func _collect() -> void:
 	if not _golden_animal:
 		return
+	var node          := _golden_animal
+	node.set_meta("tap_cooldown", true)
 	var rarity:       String = _golden_data.rarity if _golden_data else "common"
 	var base_coins:   int    = _golden_data.coin_amount if _golden_data else 1
 	var coins_reward: int    = COIN_MULTIPLIERS.get(rarity, 50) * base_coins
@@ -246,10 +248,14 @@ func _collect() -> void:
 	if shards_reward > 0:
 		GameState.add_spirit_shards(shards_reward)
 	if _fx:
-		_fx.spawn_coin_burst(_golden_animal.global_position, coins_reward)
+		_fx.spawn_coin_burst(node.global_position, coins_reward)
 	EventBus.golden_animal_collected.emit(coins_reward, shards_reward)
 	_cleanup()
 	_start_spawn_timer()
+	get_tree().create_timer(0.5).timeout.connect(func():
+		if is_instance_valid(node):
+			node.set_meta("tap_cooldown", false)
+	, CONNECT_ONE_SHOT)
 
 
 func _on_expired() -> void:

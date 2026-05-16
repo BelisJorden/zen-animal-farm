@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bu5s60j3iqj7q"
-path.bptc="res://.godot/imported/Sheep.png-38dda9a12817885590218c6bd44ad726.bptc.ctex"
+uid="uid://c2k277uwygh41"
+path.bptc="res://.godot/imported/FarmIsland.png-93922f2577bad7422d36ce626a3ed3bb.bptc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -11,8 +11,8 @@ metadata={
 
 [deps]
 
-source_file="res://assets/models/animals/Sheep.png"
-dest_files=["res://.godot/imported/Sheep.png-38dda9a12817885590218c6bd44ad726.bptc.ctex"]
+source_file="res://assets/models/farm/FarmIsland.png"
+dest_files=["res://.godot/imported/FarmIsland.png-93922f2577bad7422d36ce626a3ed3bb.bptc.ctex"]
 
 [params]
 

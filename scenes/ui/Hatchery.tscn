@@ -7,6 +7,7 @@
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_bg"]
 shader = ExtResource("2_shader")
 shader_parameter/color_top    = Color(0.769, 0.682, 0.867, 1.0)
+shader_parameter/color_mid    = Color(0.865, 0.726, 0.842, 1.0)
 shader_parameter/color_bottom = Color(0.961, 0.769, 0.816, 1.0)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_egg"]

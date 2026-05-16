@@ -36,6 +36,7 @@
 
 ### 3. Farm grid (`scenes/world/Farm.tscn`)
 - Isometrisch 3D grid, voxel-stijl grastiles (FarmGrid.obj uit MagicaVoxel)
+- **FarmIsland:** decoratief zwevend eiland (`FarmIslandBig.glb`) geladen via `farm.gd _ready()`, `move_child(island, 0)` zodat het achter grid en dieren valt. Positie: x=0.1, y=-4.0, scale=1.0
 - Dieren worden gespawnd als Node3D op AnimalLayer
 - Camera: orthogonal, 45° rotatie, vaste hoogte
 - Touch: tap op tile → plaatst dier (in placing mode); drag → pan camera
@@ -240,10 +241,10 @@ GRID_ORIGIN = Vector3(-1.75, 0, -1.75)
 ```gdscript
 # Farm camera — isometrisch orthogonaal
 camera.projection   = Camera3D.PROJECTION_ORTHOGONAL
-camera.size         = 11.0
-camera.position     = Vector3(5.66, 8, 5.66)
+camera.size         = 12.0
+camera.position     = Vector3(5.7, 6.8, 5.66)
 camera.rotation_deg = Vector3(-45, 45, 0)
-# Kijkt exact naar (0, 0, 0) = center van het grid
+# Positie omhoog/terug gebracht voor meer zichtbaarheid van FarmIsland zijkanten
 ```
 
 ---
@@ -308,7 +309,7 @@ signal quest_completed(quest_id: String)
 - Tile selectie: Decal fade in `modulate.a` 0→0.85 in 0.15s; deselect fade uit in 0.10s
 - Tile bezet-feedback: rode puls (scale 1→1.4→0) in 280ms, daarna verborgen
 - Coin collect: Label3D "+N" stijgt 0.6 units in 0.8s, alpha fade 1→0 na 0.4s delay (via FXManager.spawn_coin_popup)
-- Dier tap: squish (scaleXZ×1.2, scaleY×0.7, 0.08s) → spring omhoog (scaleXZ×0.85, scaleY×1.3, +0.12 Y, 0.12s) → settle (terug naar base scale + Y, 0.10s). 1s cooldown per dier via `tap_cooldown` meta. Overgeslagen als `is_golden` meta true. Lila ♥/✦ burst via FXManager.spawn_tap_burst.
+- Dier tap: squish (scaleXZ×1.2, scaleY×0.7, 0.08s) → spring omhoog (scaleXZ×0.85, scaleY×1.3, +0.12 Y, 0.12s) → settle (terug naar base scale + Y, 0.10s). 1s cooldown per dier via `tap_cooldown` meta. Overgeslagen als `is_golden` of `tap_cooldown` meta true. Lila ♥/✦ burst via FXManager.spawn_tap_burst.
 - Ei crack: shake + particles bij elke tap (nog niet geïmplementeerd)
 - Combineren: beide dieren naar midden, flash, nieuw dier spawnt met particles (nog niet geïmplementeerd)
 
@@ -375,6 +376,11 @@ func add_placed_animal_cps(coin_amount: int, coin_rate: float)  # accumuleert CP
 | 2026-05-15 | AnimalDetailPanel: gedeeld bottom-sheet panel (scenes/ui/components/AnimalDetailPanel.tscn + scripts/ui/animal_detail_panel.gd). Slide-in animatie vanuit onderkant (0.22s ease-out cubic). Context "shop" toont prijs + koopknop; context "placing" toont voorraadtelling + plaatsenknop. Shop animal cards openen panel via gui_input (geen inline koopknop meer). PlacingUI cards openen panel; "plaatsen" bevestigt selectie via _select_card. Rarity kleuren: common=#888780, rare=#7B5EA7, mystic=#F0A030. |
 | 2026-05-15 | Golden animal systeem: GoldenAnimalManager autoload beheert random golden spawns (3–5 min interval, max 1 actief). Gewogen selectie: common 9×, rare 3×, mystic 1×. Duur: 15 sec. Beloningen: common 50×coin_amount (10% shard), rare 100× (40% shard), mystic 200× (100% shard). Visuals via material_override goudtint + Label3D ring + countdown boven dier + pulse scale tween. Input via Area3D op dier in SubViewport (set_input_as_handled voorkomt tile-shake conflict). FXManager.spawn_coin_burst voor grote burst animatie. HUD golden indicator bar met countdown. |
 | 2026-05-15 | Tap animatie op geplaatste dieren: 3-fase squish/spring/settle tween (0.30s totaal) via `_anim_tap` in farm.gd. `_animal_at_tile` dict (key "col,row") bijhoudt welk Node3D op welke tile staat. `_bob_tweens` dict pauzeert de bob tween tijdens tap en herstart daarna. `is_golden` meta (gezet door GoldenAnimalManager) voorkomt conflict. Tap werkt ook als placing mode open is. FXManager.spawn_tap_burst: 5 lila ♥/✦ Label3D particles spatten uiteen. |
+| 2026-05-16 | Achtergrond gradient shader uitgebreid naar 3 kleurstops: `color_top` / `color_mid` / `color_bottom` + `vignette_strength` uniform (default 0.0). FarmScreen: lila #C4AEDD → roze-beige #DDB8C4 → beige #F0D5B8, vignette 0.25. MainMenu/Shop/Hatchery ongewijzigd (color_mid = wiskundig middenpunt, vignette_strength=0.0). |
+| 2026-05-16 | FarmIsland decoratief eiland: FarmIslandBig.glb geladen via `farm.gd _ready()` (niet in .tscn — .glb is een scene, geen mesh). `move_child(island, 0)` plaatst het achter grid en dieren. Scale=1.0 (zelfde als FarmGrid), position=(0.1, -4.0, 0). |
+| 2026-05-16 | Camera bijgesteld voor betere eilandzichtbaarheid: size=12.0, positie=(5.7, 6.8, 5.66). |
+| 2026-05-16 | Dier spawn positie offset: `tile_pos + Vector3(0.20, 0.25, 0.12)` — dieren staan meer naar de voorkant van de tile in isometrisch perspectief. |
+| 2026-05-16 | Golden tap-burst race condition gefixed: `tap_cooldown=true` gezet in `_collect()` vóór `_cleanup()` zodat tile Area3D (dat later zelfde input ontvangt) `_anim_tap` niet afmaakt. Reset via `create_timer(0.5)`. |
 
 ---
 
@@ -409,6 +415,7 @@ MAX_INTERVAL    = 300.0      # 5 minuten maximum wachttijd
 - `EventBus.animal_placed.emit(node)` geëmit na spawnen — GoldenAnimalManager bouwt zo `_placed_animals` lijst op
 - `_input_area.get_viewport()` retourneert de SubViewport (Farm3D) — correct voor `set_input_as_handled()`
 - `_tick_countdown` gebruikt `_golden_animal == null` check als stopcriteria (geen aparte tween-referentie nodig)
+- **Race condition fix:** `set_input_as_handled()` blokkeert `_unhandled_input` maar NIET andere Area3D `input_event` callbacks. Tile Area3D en golden Area3D ontvangen beide de tap. Als golden Area3D eerst runt → `_collect()` → `is_golden=false` → tile Area3D runt → `_anim_tap` ziet `is_golden=false` en speelt ten onrechte af. Fix: `tap_cooldown=true` zetten op het dier in `_collect()` vóór `_cleanup()`, via `create_timer(0.5)` gereset na events.
 
 ---
 
