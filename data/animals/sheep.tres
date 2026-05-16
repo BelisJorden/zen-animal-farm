@@ -11,5 +11,6 @@ color = Color(0.9, 0.88, 0.85, 1)
 scale = 1.0
 spawn_rotation = 90.0
 price = 1
+rarity = "rare"
 coin_amount = 5
 image_path = "res://assets/models/animals/SheepWhiteUI.png"
