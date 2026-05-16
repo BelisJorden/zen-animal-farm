@@ -6,13 +6,8 @@ const COLOR_TAB_ACTIVE := Color(0.482, 0.369, 0.655)
 const COLOR_WHITE     := Color(1.00, 1.00, 1.00)
 const COLOR_TEXT_DARK := Color(0.28, 0.20, 0.38)
 
-@onready var top_panel:      PanelContainer = $TopPanel
-@onready var avatar:         PanelContainer = $TopPanel/TopRow/PlayerInfo/Avatar
-@onready var avatar_letter:  Label          = $TopPanel/TopRow/PlayerInfo/Avatar/AvatarLetter
-@onready var name_label:     Label          = $TopPanel/TopRow/PlayerInfo/PlayerDetails/NameLabel
-@onready var level_day:      Label          = $TopPanel/TopRow/PlayerInfo/PlayerDetails/LevelDayLabel
-@onready var coin_label:     Label          = $TopPanel/TopRow/CoinCounter/CoinRow/CoinAmountLabel
-@onready var cps_label:      Label          = $TopPanel/TopRow/CoinCounter/CpsLabel
+@onready var coin_label:     Label          = $CoinCounter/CoinRow/CoinAmountLabel
+@onready var cps_label:      Label          = $CoinCounter/CpsLabel
 @onready var notif_popup:    PanelContainer = $NotificationPopup
 @onready var notif_label:    Label          = $NotificationPopup/NotifLabel
 @onready var quest_bar:      PanelContainer = $QuestBar
@@ -42,7 +37,6 @@ func _ready() -> void:
 	_setup_tabs()
 	_connect_signals()
 	_setup_golden_bar()
-	_refresh_player_info()
 	_refresh_coins(GameState.coins)
 	_set_active_tab("farm")
 
@@ -50,15 +44,6 @@ func _ready() -> void:
 # ── Styling ────────────────────────────────────────────────────────────────────
 
 func _style_panels() -> void:
-	top_panel.add_theme_stylebox_override("panel", _flat_box(Color(0, 0, 0, 0.30), 0))
-
-	var avatar_style := _flat_box(COLOR_LILA_DARK, 24)
-	avatar_style.content_margin_left   = 0
-	avatar_style.content_margin_right  = 0
-	avatar_style.content_margin_top    = 0
-	avatar_style.content_margin_bottom = 0
-	avatar.add_theme_stylebox_override("panel", avatar_style)
-
 	var notif_style := _flat_box(Color(0.42, 0.28, 0.65, 0.90), 20)
 	notif_style.content_margin_left   = 14
 	notif_style.content_margin_right  = 14
@@ -142,12 +127,6 @@ func _connect_signals() -> void:
 
 
 # ── Data refresh ───────────────────────────────────────────────────────────────
-
-func _refresh_player_info() -> void:
-	name_label.text  = GameState.player_name
-	level_day.text   = "lv.%d · dag %d" % [GameState.level, GameState.day]
-	avatar_letter.text = GameState.player_name.left(1).to_upper()
-
 
 func _refresh_coins(amount: int) -> void:
 	coin_label.text = str(amount)
@@ -245,12 +224,12 @@ func _setup_golden_bar() -> void:
 	hbox.add_child(_golden_cnt_label)
 	_golden_bar.add_child(hbox)
 
-	# Centered horizontally, just below the top panel (~90px from top)
+	# Centered horizontally, near top of screen
 	_golden_bar.set_anchors_preset(Control.PRESET_TOP_WIDE)
 	_golden_bar.offset_left   = 155
 	_golden_bar.offset_right  = -155
-	_golden_bar.offset_top    = 90
-	_golden_bar.offset_bottom = 90
+	_golden_bar.offset_top    = 16
+	_golden_bar.offset_bottom = 16
 	add_child(_golden_bar)
 
 	_golden_tick          = Timer.new()

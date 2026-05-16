@@ -14,83 +14,38 @@ mouse_filter = 2
 theme = ExtResource("2_theme")
 script = ExtResource("1_hud")
 
-[node name="TopPanel" type="PanelContainer" parent="." unique_id=125255163]
+[node name="CoinCounter" type="VBoxContainer" parent="." unique_id=459560046]
 layout_mode = 1
-anchors_preset = 10
+anchor_left = 1.0
 anchor_right = 1.0
-offset_bottom = 88.0
-grow_horizontal = 2
-mouse_filter = 0
-
-[node name="TopRow" type="HBoxContainer" parent="TopPanel" unique_id=1570129161]
-layout_mode = 2
-theme_override_constants/separation = 0
-
-[node name="PlayerInfo" type="HBoxContainer" parent="TopPanel/TopRow" unique_id=1083552825]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/separation = 10
-
-[node name="Avatar" type="PanelContainer" parent="TopPanel/TopRow/PlayerInfo" unique_id=916740190]
-custom_minimum_size = Vector2(48, 48)
-layout_mode = 2
-
-[node name="AvatarLetter" type="Label" parent="TopPanel/TopRow/PlayerInfo/Avatar" unique_id=1122697784]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_font_sizes/font_size = 20
-text = "Y"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="PlayerDetails" type="VBoxContainer" parent="TopPanel/TopRow/PlayerInfo" unique_id=348244127]
-layout_mode = 2
-size_flags_vertical = 4
+offset_left = -160.0
+offset_right = -16.0
+offset_top = 16.0
+offset_bottom = 72.0
+grow_horizontal = 0
 theme_override_constants/separation = 2
 
-[node name="NameLabel" type="Label" parent="TopPanel/TopRow/PlayerInfo/PlayerDetails" unique_id=18026408]
+[node name="CoinRow" type="HBoxContainer" parent="CoinCounter" unique_id=459560047]
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_font_sizes/font_size = 17
-text = "Yumi"
-
-[node name="LevelDayLabel" type="Label" parent="TopPanel/TopRow/PlayerInfo/PlayerDetails" unique_id=442010767]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 1, 0.7)
-theme_override_font_sizes/font_size = 13
-text = "lv.1 . dag 1"
-
-[node name="HSpacer" type="Control" parent="TopPanel/TopRow" unique_id=1171059819]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="CoinCounter" type="VBoxContainer" parent="TopPanel/TopRow" unique_id=459560046]
-layout_mode = 2
-size_flags_vertical = 4
-theme_override_constants/separation = 1
-
-[node name="CoinRow" type="HBoxContainer" parent="TopPanel/TopRow/CoinCounter" unique_id=459560047]
-layout_mode = 2
+alignment = 2
 theme_override_constants/separation = 5
 
-[node name="CoinIcon" type="Label" parent="TopPanel/TopRow/CoinCounter/CoinRow" unique_id=153822777]
+[node name="CoinIcon" type="Label" parent="CoinCounter/CoinRow" unique_id=153822777]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.85, 0.22, 1)
 theme_override_font_sizes/font_size = 22
-text = "o"
+text = "◎"
 
-[node name="CoinAmountLabel" type="Label" parent="TopPanel/TopRow/CoinCounter/CoinRow" unique_id=100503365]
+[node name="CoinAmountLabel" type="Label" parent="CoinCounter/CoinRow" unique_id=100503365]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/font_size = 20
 text = "0"
 
-[node name="CpsLabel" type="Label" parent="TopPanel/TopRow/CoinCounter" unique_id=459560048]
+[node name="CpsLabel" type="Label" parent="CoinCounter" unique_id=459560048]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 0.55)
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 13
 text = "0.0/sec"
 horizontal_alignment = 2
 

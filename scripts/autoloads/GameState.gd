@@ -18,10 +18,6 @@ func _ready() -> void:
 	EventBus.coins_earned.connect(add_coins)
 
 
-var player_name: String = "Yumi"
-var day: int = 1
-var level: int = 1
-
 var farms: Array[Dictionary] = []
 var animals: Array[Dictionary] = []
 var unlocked_items: Array[String] = []
@@ -59,9 +55,6 @@ func add_placed_animal_cps(coin_amount: int, coin_rate: float) -> void:
 func reset_state() -> void:
 	coins         = 0
 	spirit_shards = 0
-	player_name   = "Yumi"
-	day           = 1
-	level         = 1
 	unplaced_animals.clear()
 	purchased_animal_types.clear()
 	_total_cps    = 0.0
