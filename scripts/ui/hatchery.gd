@@ -6,6 +6,11 @@ const LILA       := Color(0.58, 0.44, 0.78)
 const LILA_LIGHT := Color(0.70, 0.58, 0.86)
 const LILA_DARK  := Color(0.47, 0.35, 0.65)
 const DARK       := Color(0.22, 0.16, 0.32)
+
+const EGG_COLOR_COMMON := Color(0.95, 0.93, 0.88)
+const EGG_COLOR_RARE   := Color(0.6,  0.4,  0.9)
+const EGG_COLOR_MYSTIC := Color(1.0,  0.75, 0.1)
+
 const MAX_TAPS   := 5
 
 const COST_COMMON := 3
@@ -24,8 +29,13 @@ var _dot_filled:  StyleBoxFlat
 var _dot_empty:   StyleBoxFlat
 var _pill_active: StyleBoxFlat
 var _pill_idle:   StyleBoxFlat
+var _egg_style:       StyleBoxFlat
+var _mystic_sparkle:  Control
+var _sparkle_tween:   Tween
+var _egg_color_tween: Tween
 
 @onready var egg_pivot:    Control       = $MainLayout/EggSection/EggCenter/EggPivot
+@onready var egg_panel:    Panel         = $MainLayout/EggSection/EggCenter/EggPivot/EggPanel
 @onready var status_label: Label         = $MainLayout/EggSection/StatusLabel
 @onready var dots_row:     HBoxContainer = $MainLayout/EggSection/DotsCenter/DotsRow
 @onready var common_btn:   Button        = $MainLayout/RarityRow/CommonBtn
@@ -37,9 +47,19 @@ var _pill_idle:   StyleBoxFlat
 
 func _ready() -> void:
 	_build_styles()
+	_egg_style = StyleBoxFlat.new()
+	_egg_style.corner_radius_top_left     = 70
+	_egg_style.corner_radius_top_right    = 70
+	_egg_style.corner_radius_bottom_left  = 56
+	_egg_style.corner_radius_bottom_right = 56
+	_egg_style.shadow_color  = Color(0.22, 0.16, 0.32, 0.13)
+	_egg_style.shadow_size   = 12
+	_egg_style.shadow_offset = Vector2(0, 5)
+	egg_panel.add_theme_stylebox_override("panel", _egg_style)
 	_update_dots()
 	_update_rarity_buttons()
 	_update_tap_btn_label()
+	_update_egg_color(false)
 	_refresh_shards(GameState.spirit_shards)
 	SaveSystem.save_game()
 	egg_pivot.pivot_offset = egg_pivot.custom_minimum_size / 2.0
@@ -106,10 +126,67 @@ func _select_rarity(rarity: String) -> void:
 	_rarity = rarity
 	_update_rarity_buttons()
 	_update_tap_btn_label()
+	_update_egg_color()
 
 
 func _refresh_shards(amount: int) -> void:
 	shard_label.text = "✦ %d" % amount
+
+
+func _update_egg_color(animated: bool = true) -> void:
+	var target: Color
+	match _rarity:
+		"rare":   target = EGG_COLOR_RARE
+		"mystic": target = EGG_COLOR_MYSTIC
+		_:        target = EGG_COLOR_COMMON
+	if _egg_color_tween:
+		_egg_color_tween.kill()
+	if animated:
+		_egg_color_tween = create_tween()
+		var from := _egg_style.bg_color
+		_egg_color_tween.tween_method(
+			func(c: Color): _egg_style.bg_color = c,
+			from, target, 0.3
+		)
+	else:
+		_egg_style.bg_color = target
+	_update_mystic_sparkle()
+
+
+func _update_mystic_sparkle() -> void:
+	if _rarity == "mystic":
+		if _mystic_sparkle == null:
+			_spawn_mystic_sparkle()
+	else:
+		if _mystic_sparkle != null:
+			_mystic_sparkle.queue_free()
+			_mystic_sparkle = null
+		if _sparkle_tween:
+			_sparkle_tween.kill()
+			_sparkle_tween = null
+
+
+func _spawn_mystic_sparkle() -> void:
+	var orbit := Control.new()
+	orbit.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	orbit.position = Vector2(65, 95)  # center of EggPivot (130×190)
+	orbit.size = Vector2.ZERO
+	egg_pivot.add_child(orbit)
+	_mystic_sparkle = orbit
+
+	for i in 4:
+		var lbl := Label.new()
+		lbl.text = "✦"
+		lbl.add_theme_font_size_override("font_size", 14)
+		lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2))
+		lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var angle := i * TAU / 4.0
+		lbl.position = Vector2(cos(angle) * 72.0 - 8.0, sin(angle) * 72.0 - 8.0)
+		orbit.add_child(lbl)
+
+	_sparkle_tween = create_tween().set_loops()
+	_sparkle_tween.tween_property(orbit, "rotation", TAU, 4.0) \
+		.set_trans(Tween.TRANS_LINEAR)
 
 
 func _update_tap_btn_label() -> void:
@@ -143,7 +220,7 @@ func _shard_cost() -> int:
 		_:        return COST_COMMON
 
 
-# ── Animations (ongewijzigd) ──────────────────────────────────────────────────
+# ── Animations ────────────────────────────────────────────────────────────────
 
 func _anim_shake() -> void:
 	var ox := egg_pivot.position.x

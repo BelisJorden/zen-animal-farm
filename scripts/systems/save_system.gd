@@ -27,6 +27,8 @@ func save_game() -> void:
 
 	cfg.set_value("farm", "placed", placed_animals_to_restore)
 
+	QuestManager.save_state(cfg)
+
 	cfg.save(SAVE_PATH)
 
 
@@ -54,6 +56,8 @@ func load_game() -> bool:
 	EventBus.inventory_changed.emit()
 
 	placed_animals_to_restore = cfg.get_value("farm", "placed", [])
+
+	QuestManager.load_state(cfg)
 	return true
 
 
@@ -73,7 +77,7 @@ func register_placed_animal(col: int, row: int, type: String) -> void:
 func _apply_defaults() -> void:
 	placed_animals_to_restore = []
 	GameState.coins         = 100
-	GameState.spirit_shards = 10
+	GameState.spirit_shards = 25
 	GameState.unplaced_animals.clear()
 	GameState.purchased_animal_types.clear()
 	for _i in 5:
@@ -82,3 +86,7 @@ func _apply_defaults() -> void:
 		GameState.add_to_inventory({"name": "sheep"})
 	for _i in 5:
 		GameState.add_to_inventory({"name": "pig"})
+	QuestManager.active_quests.clear()
+	QuestManager.completed_quests.clear()
+	QuestManager.quest_progress.clear()
+	QuestManager._fill_active_quests()

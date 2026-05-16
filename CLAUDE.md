@@ -25,7 +25,7 @@
 ### 2. Farm / HUD (`scenes/ui/HUD.tscn`)
 - **Rechts boven:** Coin-teller (◎ goud icoon + aantal) + coins/sec indicator eronder ("1.2/sec", gedimde witte tekst) — VBoxContainer, anchor right, 16px marge van rand. Geen avatar/naam/level/dag meer.
 - **Midden links:** Floating notificatie "+3 ✦ ready" (spirit shards klaar)
-- **Onderin:** Quest/task balk — "collect 3 spirit shards · 2/3" met progress bar
+- **Onderin:** Quest balk — scrollbare lijst van 3 actieve quests (elk: titel + beloningen rechts, progress bar, N/M tekst). Hoogte 204px boven BottomNav. Verborgen tijdens placing mode.
 - **Bottom nav (5 tabs):**
   - `farm` — hoofdscherm, isometrisch grid
   - `build` — plaatsingsmodus
@@ -49,7 +49,11 @@
 
 ### 5. Hatchery (`scenes/ui/Hatchery.tscn`)
 - Header: "hatchery" + back knop links + spirit shard teller rechts ("✦ N" goudgeel, ShardCounter node)
-- Centraal: voxel ei model (groot, shaking animatie per tap)
+- Centraal: 2D Panel ei (130×190, afgeronde hoeken) — kleur past aan op geselecteerde rarity:
+  - `common` → beige/wit (`EGG_COLOR_COMMON = Color(0.95, 0.93, 0.88)`)
+  - `rare` → lila (`EGG_COLOR_RARE = Color(0.6, 0.4, 0.9)`) — standaard bij openen
+  - `mystic` → goud (`EGG_COLOR_MYSTIC = Color(1.0, 0.75, 0.1)`) + 4 roterende "✦" labels eromheen
+  - Kleurovergang via Tween (0.3s) bij wisselen; sparkle-orbit verdwijnt bij non-mystic
 - Tekst: "almost there..." / "one more tap!" / "it hatched!"
 - Progress: 5 dots (●●●○○ stijl), vult per tap
 - Rarity selector: `common` / `rare` / `mystic` — bepaalt minimale rarity van roll + shardkosten
@@ -156,7 +160,10 @@ res://
 │   ├── resources/
 │   │   └── animal_data.gd    # AnimalData Resource class
 │   ├── systems/
-│   │   └── fx_manager.gd     # FXManager autoload: spawn_coin_popup, spawn_coin_burst, spawn_tap_burst
+│   │   ├── fx_manager.gd         # FXManager autoload: spawn_coin_popup, spawn_coin_burst, spawn_tap_burst
+│   │   ├── golden_animal_manager.gd  # GoldenAnimalManager autoload
+│   │   ├── quest_manager.gd      # QuestManager autoload: 12 quests, progress tracking, rewards
+│   │   └── save_system.gd        # SaveSystem autoload: ConfigFile save/load
 │   └── autoloads/
 │       ├── GameState.gd      # coins, spirit_shards, inventory, add/remove
 │       ├── AnimalRegistry.gd # laadt alle .tres uit data/animals/, get_animal(id)
@@ -298,9 +305,13 @@ signal egg_tapped(progress: int)
 signal egg_hatched(animal_data: Dictionary)
 signal animal_hatched(animal_id: String, rarity: String)
 
+# Animals
+signal animal_tapped(animal: Node)
+
 # Quests
 signal quest_progress_updated(quest_id: String, current: int, target: int)
-signal quest_completed(quest_id: String)
+signal quest_completed(quest_id: String, reward_coins: int, reward_shards: int, reward_item: String)
+signal quests_updated()
 ```
 
 ---
@@ -312,6 +323,7 @@ signal quest_completed(quest_id: String)
 - **GameState autoload** voor globale data (coins, inventory, farm data)
 - **AnimalRegistry autoload** — `extends Node` met `_ready()` en hardcoded `ANIMAL_PATHS`; **niet preloaden** in andere scripts — gebruik direct als singleton. Noodzakelijk voor Android (DirAccess werkt niet in APK exports)
 - **FXManager autoload** — Node, beheert visuele effecten; `set_fx_root(node)` aanroepen vanuit de scene die FX wil spawnen
+- **QuestManager autoload** — beheert 12 quests in volgorde van moeilijkheid; max 3 actief tegelijk; luistert naar EventBus voor progress; volgorde in project.godot: vóór SaveSystem (zodat SaveSystem save_state/load_state kan aanroepen)
 - **Tweens** voor alle animaties — geen AnimationPlayer voor code-driven animaties
 - Constanten in `UPPERCASE` bovenaan elk script
 - GDScript type hints waar mogelijk: `var coins: int = 0`
@@ -344,6 +356,7 @@ func spend_coins(amount: int) -> bool
 func spend_shards(amount: int) -> bool           # alias voor spend_spirit_shards
 func spend_spirit_shards(amount: int) -> bool
 func add_placed_animal_cps(coin_amount: int, coin_rate: float)  # accumuleert CPS, emit coins_per_second_changed
+func add_shards(amount: int)                                    # alias voor add_spirit_shards
 ```
 Verwijderd: `player_name`, `day`, `level` — niet meer gebruikt.
 
@@ -364,6 +377,7 @@ Verwijderd: `player_name`, `day`, `level` — niet meer gebruikt.
 - Sla op bij: elke plaatsing, aankoop, combinatie, app minimize
 - Data: coins, spirit_shards, farms[], animals[], unlocked_items[]
 - **SaveSystem autoload** — `register_placed_animal(col, row, type)` bij plaatsing; `restore_farm` signal → `farm.gd._restore_placed_animals(placed: Array)` herstelt geplaatste dieren bij opstart
+- Quest state opgeslagen onder `[quests]` sectie: `active`, `completed`, `progress` — via `QuestManager.save_state(cfg)` / `load_state(cfg)`
 
 ---
 
@@ -409,6 +423,11 @@ Verwijderd: `player_name`, `day`, `level` — niet meer gebruikt.
 | 2026-05-16 | EventBus signalen toegevoegd: `animal_hatched(animal_id, rarity)` na elk ei; `shards_changed(amount)` bij elke shard-wijziging (via spirit_shards setter in GameState). |
 | 2026-05-16 | Hatchery spirit shard teller: ShardCounter (CenterContainer) in HeaderBar rechts, vervangt lege HeaderSpacer. ShardLabel toont "✦ N" in goudgeel, geupdate via EventBus.shards_changed. |
 | 2026-05-16 | Dier rarity waarden expliciet gezet in .tres: chicken=common, pig=common, sheep=rare, dragon=mystic (was al correct). |
+| 2026-05-17 | Hatchery ei kleur per rarity: common=beige, rare=lila (standaard), mystic=goud. `_egg_style` StyleBoxFlat gedupliceeerd en overschreven via `add_theme_stylebox_override`. Kleur tween 0.3s. Mystic: 4 roterende "✦" Label nodes in orbit Control (radius 72px, 4s rotatie loop). Sparkle verdwijnt bij non-mystic. |
+| 2026-05-17 | Quest systeem geïmplementeerd: QuestManager autoload (`scripts/systems/quest_manager.gd`). 12 quests in volgorde van moeilijkheid (easy/medium/hard), max 3 actief tegelijk. Types: place_animals, earn_coins, hatch_eggs, tap_animals, collect_shards. Bij voltooiing: volgende quest automatisch geactiveerd, beloningen via GameState, notificatie in HUD. |
+| 2026-05-17 | EventBus: `animal_tapped(animal)` geëmit vanuit `farm.gd._anim_tap()` na elke tap animatie. `quest_completed` signature uitgebreid met reward_coins, reward_shards, reward_item. `quests_updated()` signal toegevoegd. |
+| 2026-05-17 | HUD quest balk vervangen: enkelvoudige quest → scrollbare VBoxContainer (QuestList) met 3 dynamische quest cards. Elk card: titel + beloningsoverzicht (◎N ✦N) + progress bar + N/M tekst. Cards gebouwd via `_rebuild_quest_cards()` in hud.gd. |
+| 2026-05-17 | collect_shards tracking: QuestManager luistert naar `shards_changed(new_total)` en berekent delta via `_last_known_shards`. Enkel stijgingen tellen (uitgeven telt niet mee). |
 
 ---
 
@@ -444,6 +463,51 @@ MAX_INTERVAL    = 300.0      # 5 minuten maximum wachttijd
 - `_input_area.get_viewport()` retourneert de SubViewport (Farm3D) — correct voor `set_input_as_handled()`
 - `_tick_countdown` gebruikt `_golden_animal == null` check als stopcriteria (geen aparte tween-referentie nodig)
 - **Race condition fix:** `set_input_as_handled()` blokkeert `_unhandled_input` maar NIET andere Area3D `input_event` callbacks. Tile Area3D en golden Area3D ontvangen beide de tap. Als golden Area3D eerst runt → `_collect()` → `is_golden=false` → tile Area3D runt → `_anim_tap` ziet `is_golden=false` en speelt ten onrechte af. Fix: `tap_cooldown=true` zetten op het dier in `_collect()` vóór `_cleanup()`, via `create_timer(0.5)` gereset na events.
+
+---
+
+## Quest systeem (QuestManager)
+
+### State
+```gdscript
+var active_quests:    Array      # max 3 quest ids tegelijk
+var completed_quests: Array      # alle ooit voltooide quest ids
+var quest_progress:   Dictionary # quest_id -> int (cumulatief)
+```
+
+### Quest types & EventBus triggers
+| Type | Signal | Increment |
+|------|--------|-----------|
+| `place_animals`  | `animal_placed`   | +1 per dier |
+| `earn_coins`     | `coins_earned`    | +amount |
+| `hatch_eggs`     | `animal_hatched`  | +1 per ei |
+| `tap_animals`    | `animal_tapped`   | +1 per tap |
+| `collect_shards` | `shards_changed`  | +delta (enkel stijgingen) |
+
+### Flow
+1. `_ready()` → `_fill_active_quests()` vult tot 3 uit `ALL_QUESTS` (filtert completed + al actief)
+2. EventBus signal → `_track_progress(type, amount)` → `quest_progress[id] += amount`
+3. Als `progress >= target` → `_complete_quest(id)`:
+   - Beloningen via `GameState.add_coins()` + `add_spirit_shards()`
+   - `EventBus.quest_completed.emit(id, coins, shards, item)`
+   - `_fill_active_quests()` → nieuwe quest + `EventBus.quests_updated.emit()`
+4. HUD luistert naar `quests_updated` → `_rebuild_quest_cards()`; `quest_progress_updated` → live bar update
+
+### Beschikbare quests (in volgorde)
+| id | type | target | ◎ | ✦ |
+|----|------|--------|---|---|
+| place_3_animals | place_animals | 3 | 50 | 2 |
+| earn_200_coins | earn_coins | 200 | 30 | 3 |
+| hatch_1_egg | hatch_eggs | 1 | 40 | 5 |
+| tap_5_animals | tap_animals | 5 | 25 | 1 |
+| place_10_animals | place_animals | 10 | 150 | 5 |
+| earn_1000_coins | earn_coins | 1000 | 100 | 8 |
+| hatch_5_eggs | hatch_eggs | 5 | 200 | 10 |
+| collect_20_shards | collect_shards | 20 | 300 | 5 |
+| place_25_animals | place_animals | 25 | 500 | 15 |
+| earn_5000_coins | earn_coins | 5000 | 400 | 20 |
+| hatch_15_eggs | hatch_eggs | 15 | 600 | 25 |
+| tap_50_animals | tap_animals | 50 | 250 | 15 |
 
 ---
 

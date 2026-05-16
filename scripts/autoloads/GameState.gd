@@ -13,6 +13,7 @@ var spirit_shards: int = 0:
 	set(value):
 		spirit_shards = max(0, value)
 		spirit_shards_changed.emit(spirit_shards)
+		EventBus.shards_changed.emit(spirit_shards)
 
 func _ready() -> void:
 	EventBus.coins_earned.connect(add_coins)
@@ -81,3 +82,11 @@ func spend_spirit_shards(amount: int) -> bool:
 		return false
 	spirit_shards -= amount
 	return true
+
+
+func spend_shards(amount: int) -> bool:
+	return spend_spirit_shards(amount)
+
+
+func add_shards(amount: int) -> void:
+	add_spirit_shards(amount)

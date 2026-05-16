@@ -10,6 +10,7 @@ signal tile_tapped(col: int, row: int, world_pos: Vector3)
 signal farm_unlocked(farm_id: String)
 
 # Animals
+signal animal_tapped(animal: Node)
 signal animal_combined(result_animal: Node)
 signal animal_trained(animal: Node)
 signal animal_sent_to_spa(animal: Node)
@@ -21,14 +22,17 @@ signal coins_changed(new_amount: int)
 signal coins_per_second_changed(cps: float)
 signal coins_collected(amount: int, world_pos: Vector3)
 signal spirit_shard_collected(amount: int)
+signal shards_changed(amount: int)
 
 # Hatchery
 signal egg_tapped(progress: int)
 signal egg_hatched(animal_data: Dictionary)
+signal animal_hatched(animal_id: String, rarity: String)
 
 # Quests
 signal quest_progress_updated(quest_id: String, current: int, target: int)
-signal quest_completed(quest_id: String)
+signal quest_completed(quest_id: String, reward_coins: int, reward_shards: int, reward_item: String)
+signal quests_updated()
 
 # Inventory
 signal inventory_changed

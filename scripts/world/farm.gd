@@ -304,6 +304,7 @@ func _anim_tap(node: Node3D) -> void:
 	)
 
 	FXManager.spawn_tap_burst(node.global_position)
+	EventBus.animal_tapped.emit(node)
 
 
 # ── Tab handler ────────────────────────────────────────────────────────────────
