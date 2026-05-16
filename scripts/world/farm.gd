@@ -1,7 +1,6 @@
 extends Node3D
 
-const AnimalData      = preload("res://scripts/resources/animal_data.gd")
-const AnimalRegistry  = preload("res://scripts/autoloads/AnimalRegistry.gd")
+const AnimalData = preload("res://scripts/resources/animal_data.gd")
 const PAN_SENSITIVITY := 0.012
 const TAP_MAX_PIXELS  := 12.0
 
@@ -43,6 +42,8 @@ func _ready() -> void:
 	EventBus.placing_mode_exited.connect(_exit_placing_mode)
 	EventBus.tab_changed.connect(_on_tab_changed)
 	EventBus.tile_tapped.connect(_on_tile_tapped)
+	EventBus.farm_data_loaded.connect(_restore_placed_animals)
+	SaveSystem.restore_farm.call_deferred()
 
 
 # ── Input ──────────────────────────────────────────────────────────────────────
@@ -149,7 +150,25 @@ func _spawn_ghost(animal: AnimalData) -> void:
 	_ghost.visible = false
 
 
-func _spawn_animal(tile_pos: Vector3, animal: AnimalData) -> Node3D:
+func _restore_placed_animals(placed: Array) -> void:
+	for entry in placed:
+		var col:  int    = entry.get("col", -1)
+		var row:  int    = entry.get("row", -1)
+		var type: String = entry.get("type", "")
+		if col < 0 or row < 0 or type.is_empty():
+			continue
+		var animal: AnimalData = AnimalRegistry.get_animal(type)
+		if not animal:
+			continue
+		if not tile_layer.is_tile_free(col, row):
+			continue
+		tile_layer.occupy_tile(col, row)
+		var tile_pos := Vector3(-1.75 + col * 0.7 + 0.35, 0.0, -1.75 + row * 0.7 + 0.35)
+		var node := _spawn_animal(tile_pos, animal, false)
+		_animal_at_tile["%d,%d" % [col, row]] = node
+
+
+func _spawn_animal(tile_pos: Vector3, animal: AnimalData, animate: bool = true) -> Node3D:
 	var node: Node3D
 	if animal.scene_path != "":
 		var res := load(animal.scene_path)
@@ -183,7 +202,10 @@ func _spawn_animal(tile_pos: Vector3, animal: AnimalData) -> Node3D:
 		FXManager.spawn_coin_popup(node.global_position, animal.coin_amount)
 	)
 	node.add_child(timer)
-	_anim_spawn(node, animal.scale)
+	if animate:
+		_anim_spawn(node, animal.scale)
+	else:
+		node.scale = Vector3.ONE * animal.scale
 	_anim_bob(node)
 	GameState.add_placed_animal_cps(animal.coin_amount, animal.coin_rate)
 	return node
@@ -235,6 +257,7 @@ func _place_on_selected_tile() -> void:
 	tile_layer.occupy_tile(_selected_tile_col, _selected_tile_row)
 	var placed_node := _spawn_animal(_selected_tile_pos, _selected_animal)
 	_animal_at_tile["%d,%d" % [_selected_tile_col, _selected_tile_row]] = placed_node
+	SaveSystem.register_placed_animal(_selected_tile_col, _selected_tile_row, _selected_animal.id)
 	_clear_tile_selection()
 
 

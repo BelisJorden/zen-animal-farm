@@ -31,8 +31,9 @@
   - `farm` — hoofdscherm, isometrisch grid
   - `build` — plaatsingsmodus
   - `egg` — hatchery (actief = lila highlight)
-  - `care` — dieren verzorgen / spa
-  - `more` — instellingen, extras
+  - `shop` — shop overlay (was: `care`)
+  - `more` — instellingen, extras (More.tscn met reset progress)
+- **BottomNav altijd zichtbaar** — ook tijdens placing mode. PlacingUI BottomPanel eindigt op `offset_bottom=-125` zodat het boven de nav staat.
 
 ### 3. Farm grid (`scenes/world/Farm.tscn`)
 - Isometrisch 3D grid, voxel-stijl grastiles (FarmGrid.obj uit MagicaVoxel)
@@ -95,7 +96,7 @@ farm groeit → nieuwe farms ontgrendelen
 ### Dieren plaatsen (geïmplementeerd)
 Flow: **tile selecteren eerst, dan dier kiezen**
 
-1. Speler tikt vrije tile → Decal highlight verschijnt → `EventBus.tile_selected` geëmit
+1. Speler tikt vrije tile → 2D lila ruit highlight verschijnt (TileHighlight2D) → `EventBus.tile_selected` geëmit
 2. Als build menu nog dicht was → `EventBus.placing_mode_entered` → PlacingUI opent
 3. Speler tikt dier-card in PlacingUI → `animal_selection_changed` → `farm.gd._on_animal_selected`
 4. Tile is geselecteerd → `_place_on_selected_tile()`: inventory aftrek, tile bezet, dier spawn, highlight weg
@@ -188,10 +189,12 @@ FarmScreen (Control)
 Farm (Node3D) — farm.gd
 ├── WorldEnvironment
 ├── Sun (DirectionalLight3D)
-├── Camera3D (orthogonal, size=11)
+├── Camera3D (orthogonal, size=12)
 ├── FarmGrid (MeshInstance3D) — FarmGrid.obj, unshaded + texture
 ├── TileLayer (Node3D) — farm_grid.gd
 ├── AnimalLayer (Node3D) — gespawnde dieren
+├── HighlightLayer (CanvasLayer, z=5) — 2D tile highlight overlay
+│   └── TileHighlight2D (Node2D) — tile_highlight_2d.gd
 └── PlacingLayer (CanvasLayer, z=2)
     └── PlacingUI
 ```
@@ -227,13 +230,16 @@ GRID_ORIGIN = Vector3(-1.75, 0, -1.75)
 - `occupy_tile(col, row)` / `free_tile(col, row)`
 - `shake_tile(col, row)` — rode BoxMesh-marker: scale puls 1→1.4→0 in 280ms
 
-### Tile selectie highlight (farm_grid.gd)
-- Één herbruikbare `Decal` node, child van TileLayer, standaard `visible=false`
-- Texture: procedureel aangemaakt — 64×64 RGBA Image, gaussian-achtige soft circle (`exp(-d²×2.5)`), lila `Color(0.78, 0.60, 0.95)`
-- `select_tile(col, row)`: verplaats Decal naar tile center (Y=0.5), fade in `modulate.a` 0→0.85 in 0.15s; als al zichtbaar → directe positie-update
-- `deselect_tile()`: fade out `modulate.a` 0.85→0 in 0.10s, daarna `visible=false`
+### Tile selectie highlight (tile_highlight_2d.gd + farm_grid.gd)
+- **2D CanvasLayer aanpak** — Decal en MeshInstance3D werken niet betrouwbaar op alle Android GPU's met Forward+
+- `TileHighlight2D` (Node2D) in `HighlightLayer` (CanvasLayer z=5) inside Farm.tscn
+- Tekent een lila ruit in 2D screen space via `_draw()`: `draw_colored_polygon` (fill) + `draw_polyline` (rand)
+- Positie bepaald door `Camera3D.unproject_position(_world_pos + Vector3(0, 0.1, 0))` — volgt automatisch camera pan
+- `_process()` roept `queue_redraw()` aan elke frame terwijl zichtbaar — ruit beweegt mee met camera
+- `select_tile(col, row)`: `_tile_highlight.show_at(tile_center(col, row))`
+- `deselect_tile()`: `_tile_highlight.hide_highlight()`
+- Ruit afmetingen: w=38, h=25 pixels; offset Vector2(5, -6) voor isometrische uitlijning
 - `EventBus.tile_selected(col, row, world_pos)` / `EventBus.tile_deselected()` voor cross-scene communicatie
-- Decal size: `Vector3(TILE_SIZE*0.85, 1.0, TILE_SIZE*0.85)` — let op: werkt alleen als FarmGrid `shading_mode=0` (PER_PIXEL) heeft
 
 ---
 
@@ -295,7 +301,7 @@ signal quest_completed(quest_id: String)
 - **Signalen** voor communicatie tussen nodes — geen directe `get_node` buiten parent-child
 - **EventBus autoload** voor cross-scene events
 - **GameState autoload** voor globale data (coins, inventory, farm data)
-- **AnimalRegistry autoload** — statische klasse (geen Node), preload in scripts die hem nodig hebben
+- **AnimalRegistry autoload** — `extends Node` met `_ready()` en hardcoded `ANIMAL_PATHS`; **niet preloaden** in andere scripts — gebruik direct als singleton. Noodzakelijk voor Android (DirAccess werkt niet in APK exports)
 - **FXManager autoload** — Node, beheert visuele effecten; `set_fx_root(node)` aanroepen vanuit de scene die FX wil spawnen
 - **Tweens** voor alle animaties — geen AnimationPlayer voor code-driven animaties
 - Constanten in `UPPERCASE` bovenaan elk script
@@ -306,7 +312,7 @@ signal quest_completed(quest_id: String)
 ## Animaties & feel (prioriteit)
 - Spawn: scale `Vector3.ZERO → Vector3.ONE * animal.scale` in 0.3s, EASE_OUT + TRANS_BACK
 - Dier idle: bob ±0.03 units op/neer, 1.1s per richting, EASE_IN_OUT SINE, loopt oneindig
-- Tile selectie: Decal fade in `modulate.a` 0→0.85 in 0.15s; deselect fade uit in 0.10s
+- Tile selectie: 2D lila ruit (TileHighlight2D) — `show_at(pos)` / `hide_highlight()`; volgt camera via `_process` + `queue_redraw()`
 - Tile bezet-feedback: rode puls (scale 1→1.4→0) in 280ms, daarna verborgen
 - Coin collect: Label3D "+N" stijgt 0.6 units in 0.8s, alpha fade 1→0 na 0.4s delay (via FXManager.spawn_coin_popup)
 - Dier tap: squish (scaleXZ×1.2, scaleY×0.7, 0.08s) → spring omhoog (scaleXZ×0.85, scaleY×1.3, +0.12 Y, 0.12s) → settle (terug naar base scale + Y, 0.10s). 1s cooldown per dier via `tap_cooldown` meta. Overgeslagen als `is_golden` of `tap_cooldown` meta true. Lila ♥/✦ burst via FXManager.spawn_tap_burst.
@@ -348,7 +354,7 @@ func add_placed_animal_cps(coin_amount: int, coin_rate: float)  # accumuleert CP
 - Gebruik Godot's `ConfigFile` (geen JSON — veiliger op mobile)
 - Sla op bij: elke plaatsing, aankoop, combinatie, app minimize
 - Data: coins, spirit_shards, farms[], animals[], unlocked_items[]
-- **Nog niet geïmplementeerd**
+- **SaveSystem autoload** — `register_placed_animal(col, row, type)` bij plaatsing; `restore_farm` signal → `farm.gd._restore_placed_animals(placed: Array)` herstelt geplaatste dieren bij opstart
 
 ---
 
@@ -381,6 +387,13 @@ func add_placed_animal_cps(coin_amount: int, coin_rate: float)  # accumuleert CP
 | 2026-05-16 | Camera bijgesteld voor betere eilandzichtbaarheid: size=12.0, positie=(5.7, 6.8, 5.66). |
 | 2026-05-16 | Dier spawn positie offset: `tile_pos + Vector3(0.20, 0.25, 0.12)` — dieren staan meer naar de voorkant van de tile in isometrisch perspectief. |
 | 2026-05-16 | Golden tap-burst race condition gefixed: `tap_cooldown=true` gezet in `_collect()` vóór `_cleanup()` zodat tile Area3D (dat later zelfde input ontvangt) `_anim_tap` niet afmaakt. Reset via `create_timer(0.5)`. |
+| 2026-05-16 | AnimalRegistry omgezet van statische RefCounted naar `extends Node` autoload met `_ready()` en hardcoded `ANIMAL_PATHS`. Reden: `DirAccess.open("res://...")` werkt niet in Android APK exports — retourneert null. Alle scripts die AnimalRegistry gebruiken verwijderen hun `const AnimalRegistry = preload(...)` regel en spreken hem direct aan als singleton. |
+| 2026-05-16 | Android double-event fix: Android stuurt per tap zowel `InputEventScreenTouch` als gesimuleerde `InputEventMouseButton`. PlacingUI dier-cards: `panel.gui_input` vervangen door transparante `Button` overlay als laatste child van PanelContainer, verbonden met `button_down` signaal (Godot handelt dit correct af). |
+| 2026-05-16 | AnimalDetailPanel backdrop-close verwijderd: `gui_input` op backdrop verwijderd — panel sluit alleen via expliciete "sluiten" knop. Reden: Android double-events lieten panel direct sluiten na openen. |
+| 2026-05-16 | AnimalDetailPanel omhoog geschoven 100px boven BottomNav: `offset_bottom=-100`, `offset_top=-(SHEET_H+100)=-430`. Animatie: start `offset_top=-100`, tween naar `-430`; close: tween terug naar `-100`. |
+| 2026-05-16 | BottomNav tab "care" hernoemd naar "shop" — opent Shop overlay via `farm_screen.open_overlay("res://scenes/ui/Shop.tscn")`. BottomNav blijft altijd zichtbaar, ook in placing mode (geen `visible=false` meer bij placing). |
+| 2026-05-16 | Tile highlight vervangen: Decal (werkt niet op Android Forward+) → MeshInstance3D QuadMesh (werkt ook niet betrouwbaar) → 2D CanvasLayer met Node2D `_draw()`. `TileHighlight2D` in `HighlightLayer` (CanvasLayer z=5) tekent lila ruit via `Camera3D.unproject_position()`. `_process()` roept `queue_redraw()` elke frame aan zodat ruit camera-pan volgt. |
+| 2026-05-16 | Golden animal `is_instance_valid` fix: Android double-events lieten tweede invocatie crashen op `_input_area.get_viewport()` nadat `_cleanup()` `_input_area=null` had gezet. Fix: `is_instance_valid(_input_area)` guard bovenaan de input_event lambda. |
 
 ---
 

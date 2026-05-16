@@ -26,6 +26,7 @@ func _ready() -> void:
 	_build_styles()
 	_update_dots()
 	_update_rarity_buttons()
+	SaveSystem.save_game()
 	egg_pivot.pivot_offset = egg_pivot.custom_minimum_size / 2.0
 	tap_btn.pressed.connect(_on_tap_pressed)
 	$MainLayout/HeaderBar/BackBtn.pressed.connect(_on_back_pressed)

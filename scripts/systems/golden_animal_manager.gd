@@ -222,14 +222,14 @@ func _add_input_area() -> void:
 	_input_area.add_child(cs)
 	_golden_animal.add_child(_input_area)
 	_input_area.input_event.connect(func(_cam, ev: InputEvent, _pos, _n, _s):
-		if ev is InputEventMouseButton and ev.button_index == MOUSE_BUTTON_LEFT:
+		if not is_instance_valid(_input_area):
+			return
+		if ev is InputEventMouseButton and ev.button_index == MOUSE_BUTTON_LEFT and ev.pressed:
 			_input_area.get_viewport().set_input_as_handled()
-			if ev.pressed:
-				_collect()
-		elif ev is InputEventScreenTouch:
+			_collect()
+		elif ev is InputEventScreenTouch and ev.pressed:
 			_input_area.get_viewport().set_input_as_handled()
-			if ev.pressed:
-				_collect()
+			_collect()
 	)
 
 

@@ -1,7 +1,6 @@
 extends Control
 
-const AnimalData          = preload("res://scripts/resources/animal_data.gd")
-const AnimalRegistry      = preload("res://scripts/autoloads/AnimalRegistry.gd")
+const AnimalData             = preload("res://scripts/resources/animal_data.gd")
 const AnimalDetailPanelScene = preload("res://scenes/ui/components/AnimalDetailPanel.tscn")
 
 const LILA      := Color(0.58, 0.44, 0.78)
@@ -266,6 +265,7 @@ func _on_buy(item: Dictionary, card: PanelContainer,
 	_purchased.append(item["name"])
 	_buy_buttons.erase(price_btn)
 	GameState.add_to_inventory(item)
+	SaveSystem.save_game()
 	card.add_theme_stylebox_override("panel", _card_owned)
 	price_btn.queue_free()
 	var lbl := Label.new()
@@ -292,6 +292,7 @@ func _on_detail_action(animal_id: String, context: String) -> void:
 	if not GameState.spend_coins(animal.price):
 		return
 	GameState.add_to_inventory({"name": animal_id})
+	SaveSystem.save_game()
 	_detail_panel.close()
 
 

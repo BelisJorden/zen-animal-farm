@@ -5,6 +5,7 @@
 [ext_resource type="Script" uid="uid://bbqacvuwjjjv6" path="res://scripts/world/farm_grid.gd" id="3_farmgrid"]
 [ext_resource type="Texture2D" uid="uid://dldrwtmm4pb52" path="res://assets/models/farm/FarmGrid.png" id="4_tex"]
 [ext_resource type="PackedScene" uid="uid://cbplui00en01" path="res://scenes/ui/PlacingUI.tscn" id="5_placing"]
+[ext_resource type="Script" path="res://scripts/ui/tile_highlight_2d.gd" id="6_highlight"]
 [sub_resource type="Environment" id="Environment_1"]
 background_mode = 1
 background_color = Color(0, 0, 0, 0)
@@ -40,6 +41,12 @@ surface_material_override/0 = SubResource("Mat_unshaded")
 script = ExtResource("3_farmgrid")
 
 [node name="AnimalLayer" type="Node3D" parent="." unique_id=1213316830]
+
+[node name="HighlightLayer" type="CanvasLayer" parent="." unique_id=800000001]
+layer = 5
+
+[node name="TileHighlight2D" type="Node2D" parent="HighlightLayer" unique_id=800000002]
+script = ExtResource("6_highlight")
 
 [node name="PlacingLayer" type="CanvasLayer" parent="." unique_id=444193309]
 layer = 2

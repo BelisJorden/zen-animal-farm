@@ -2,8 +2,7 @@ extends Control
 
 signal action_pressed(animal_id: String, context: String)
 
-const AnimalData     = preload("res://scripts/resources/animal_data.gd")
-const AnimalRegistry = preload("res://scripts/autoloads/AnimalRegistry.gd")
+const AnimalData = preload("res://scripts/resources/animal_data.gd")
 
 const LILA  := Color(0.58, 0.44, 0.78)
 const DARK  := Color(0.22, 0.16, 0.32)
@@ -43,11 +42,6 @@ func _build_backdrop() -> void:
 	_backdrop.color = Color(0, 0, 0, 0.45)
 	_backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_backdrop.mouse_filter = MOUSE_FILTER_STOP
-	_backdrop.gui_input.connect(func(e: InputEvent) -> void:
-		if (e is InputEventMouseButton and e.pressed and e.button_index == MOUSE_BUTTON_LEFT) \
-				or (e is InputEventScreenTouch and e.pressed):
-			close()
-	)
 	add_child(_backdrop)
 
 
@@ -63,8 +57,8 @@ func _build_sheet() -> void:
 	s.content_margin_bottom      = 28
 	_sheet.add_theme_stylebox_override("panel", s)
 	_sheet.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
-	_sheet.offset_top    = -SHEET_H
-	_sheet.offset_bottom = 0.0
+	_sheet.offset_top    = -(SHEET_H + 100)
+	_sheet.offset_bottom = -100.0
 	add_child(_sheet)
 
 	var vbox := VBoxContainer.new()
@@ -205,10 +199,10 @@ func show_panel(animal_id: String, context: String) -> void:
 		return
 	visible = true
 	mouse_filter       = MOUSE_FILTER_STOP
-	_sheet.offset_top  = 0.0
+	_sheet.offset_top  = -100.0
 	_backdrop.modulate.a = 0.0
 	var t := create_tween().set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
-	t.tween_property(_sheet, "offset_top", -SHEET_H, 0.22)
+	t.tween_property(_sheet, "offset_top", -(SHEET_H + 100), 0.22)
 	t.parallel().tween_property(_backdrop, "modulate:a", 0.45, 0.22)
 
 
@@ -217,7 +211,7 @@ func close() -> void:
 		return
 	mouse_filter = MOUSE_FILTER_IGNORE
 	var t := create_tween().set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_CUBIC)
-	t.tween_property(_sheet, "offset_top", 0.0, 0.18)
+	t.tween_property(_sheet, "offset_top", -100.0, 0.18)
 	t.parallel().tween_property(_backdrop, "modulate:a", 0.0, 0.18)
 	t.tween_callback(func(): visible = false)
 

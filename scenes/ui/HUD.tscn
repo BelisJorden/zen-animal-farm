@@ -20,6 +20,7 @@ anchors_preset = 10
 anchor_right = 1.0
 offset_bottom = 88.0
 grow_horizontal = 2
+mouse_filter = 0
 
 [node name="TopRow" type="HBoxContainer" parent="TopPanel" unique_id=1570129161]
 layout_mode = 2
@@ -121,6 +122,7 @@ offset_top = -160.0
 offset_bottom = -88.0
 grow_horizontal = 2
 grow_vertical = 0
+mouse_filter = 0
 
 [node name="QuestContent" type="VBoxContainer" parent="QuestBar" unique_id=1849228014]
 layout_mode = 2
@@ -148,6 +150,7 @@ anchor_bottom = 1.0
 offset_top = -88.0
 grow_horizontal = 2
 grow_vertical = 0
+mouse_filter = 0
 
 [node name="TabRow" type="HBoxContainer" parent="BottomNav" unique_id=1644611551]
 layout_mode = 2
@@ -171,11 +174,11 @@ size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 14
 text = "egg"
 
-[node name="CareTab" type="Button" parent="BottomNav/TabRow" unique_id=20014534]
+[node name="ShopTab" type="Button" parent="BottomNav/TabRow" unique_id=20014534]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 14
-text = "care"
+text = "shop"
 
 [node name="MoreTab" type="Button" parent="BottomNav/TabRow" unique_id=1203178229]
 layout_mode = 2

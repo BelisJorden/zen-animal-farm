@@ -1,7 +1,6 @@
 extends Control
 
 const AnimalData             = preload("res://scripts/resources/animal_data.gd")
-const AnimalRegistry         = preload("res://scripts/autoloads/AnimalRegistry.gd")
 const AnimalDetailPanelScene = preload("res://scenes/ui/components/AnimalDetailPanel.tscn")
 
 signal animal_selection_changed(animal: AnimalData)
@@ -155,11 +154,14 @@ func _make_card(animal: AnimalData, selected: bool, count: int) -> PanelContaine
 	count_lbl.add_theme_color_override("font_color", Color(1, 1, 1, 0.9 if available else 0.35))
 	vbox.add_child(count_lbl)
 
-	panel.gui_input.connect(func(e: InputEvent) -> void:
-		if (e is InputEventMouseButton and e.pressed and e.button_index == MOUSE_BUTTON_LEFT) \
-		or (e is InputEventScreenTouch and e.pressed):
-			_detail_panel.show_panel(animal.id, "placing")
+	var tap_btn := Button.new()
+	tap_btn.focus_mode = Control.FOCUS_NONE
+	for state in ["normal", "hover", "pressed", "focus", "disabled"]:
+		tap_btn.add_theme_stylebox_override(state, StyleBoxEmpty.new())
+	tap_btn.button_down.connect(func():
+		_detail_panel.show_panel(animal.id, "placing")
 	)
+	panel.add_child(tap_btn)
 	return panel
 
 

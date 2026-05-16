@@ -34,7 +34,7 @@ func _ready() -> void:
 		$BottomNav/TabRow/FarmTab,
 		$BottomNav/TabRow/BuildTab,
 		$BottomNav/TabRow/EggTab,
-		$BottomNav/TabRow/CareTab,
+		$BottomNav/TabRow/ShopTab,
 		$BottomNav/TabRow/MoreTab,
 	]
 	_style_panels()
@@ -184,9 +184,9 @@ func _on_tab_pressed(tab_name: String) -> void:
 		"egg":
 			_open_overlay("res://scenes/ui/Hatchery.tscn")
 		"more":
+			_open_overlay("res://scenes/ui/More.tscn")
+		"shop":
 			_open_overlay("res://scenes/ui/Shop.tscn")
-		"care":
-			show_notification("coming soon")
 		_:
 			EventBus.tab_changed.emit(tab_name)
 
@@ -197,8 +197,11 @@ func _open_overlay(scene_path: String) -> void:
 
 
 func _set_placing_mode(active: bool) -> void:
-	quest_bar.visible  = not active
-	bottom_nav.visible = not active
+	quest_bar.visible = not active
+	if active:
+		_set_active_tab("build")
+	else:
+		_set_active_tab("farm")
 
 
 # ── Golden animal indicator ────────────────────────────────────────────────────
