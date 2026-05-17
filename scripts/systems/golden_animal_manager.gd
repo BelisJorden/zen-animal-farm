@@ -12,6 +12,11 @@ var _placed_animals: Array[Node3D] = []
 var _golden_animal:  Node3D        = null
 var _golden_data                   = null   # AnimalData resource
 
+var _active_golden_farm_id: String = ""
+var _active_golden_col:     int    = -1
+var _active_golden_row:     int    = -1
+var _active_golden_type:    String = ""
+
 var _spawn_timer:    Timer
 var _golden_timer:   Timer
 var _pulse_ring:     Node3D  = null
@@ -40,11 +45,38 @@ func _ready() -> void:
 	_start_spawn_timer()
 
 
+# ── Public API ─────────────────────────────────────────────────────────────────
+
+func is_active() -> bool:
+	return _active_golden_farm_id != ""
+
+
+func get_active_farm_id() -> String:
+	return _active_golden_farm_id
+
+
+func get_active_col() -> int:
+	return _active_golden_col
+
+
+func get_active_row() -> int:
+	return _active_golden_row
+
+
+# Called by farm.gd when it has the Node3D for the golden animal
+func apply_visuals_to(node: Node3D) -> void:
+	_golden_animal = node
+	_apply_golden()
+	EventBus.golden_animal_spawned.emit(_golden_animal, _active_golden_farm_id)
+
+
+# ── Animal tracking ────────────────────────────────────────────────────────────
+
 func _on_animal_placed(animal: Node) -> void:
 	var a3d := animal as Node3D
 	if a3d and a3d not in _placed_animals:
 		_placed_animals.append(a3d)
-	if _golden_animal == null and _spawn_timer.is_stopped():
+	if not is_active() and _spawn_timer.is_stopped():
 		_start_spawn_timer()
 
 
@@ -60,45 +92,69 @@ func _start_spawn_timer() -> void:
 	_spawn_timer.start(randf_range(MIN_INTERVAL, MAX_INTERVAL))
 
 
+# ── Spawn logic ────────────────────────────────────────────────────────────────
+
 func _try_spawn() -> void:
-	if _placed_animals.is_empty() or _golden_animal != null:
+	if is_active():
+		return
+	var has_animals := false
+	for farm_id in SaveSystem.placed_animals_per_farm:
+		if not SaveSystem.placed_animals_per_farm[farm_id].is_empty():
+			has_animals = true
+			break
+	if not has_animals:
 		return
 	_pick_and_spawn()
 
 
 func _pick_and_spawn() -> void:
-	var weighted: Array[Node3D] = []
-	for animal in _placed_animals:
-		if not is_instance_valid(animal):
-			continue
-		var data = animal.get_meta("animal_data", null)
-		var rarity: String = data.rarity if data else "common"
-		var w: int = RARITY_WEIGHTS.get(rarity, 9)
-		for _i in w:
-			weighted.append(animal)
+	# Build weighted list from ALL farms via SaveSystem data
+	var weighted: Array = []
+	for farm_id in SaveSystem.placed_animals_per_farm:
+		for entry in SaveSystem.placed_animals_per_farm[farm_id]:
+			var type: String = entry.get("type", "")
+			if type.is_empty():
+				continue
+			var col: int = entry.get("col", -1)
+			var row: int = entry.get("row", -1)
+			if col < 0 or row < 0:
+				continue
+			var animal_data = AnimalRegistry.get_animal(type)
+			var rarity: String = animal_data.rarity if animal_data else "common"
+			var w: int = RARITY_WEIGHTS.get(rarity, 9)
+			for _i in w:
+				weighted.append({"farm_id": farm_id, "col": col, "row": row, "type": type})
+
 	if weighted.is_empty():
 		_start_spawn_timer()
 		return
-	_golden_animal = weighted[randi() % weighted.size()]
-	_golden_data   = _golden_animal.get_meta("animal_data", null)
-	_apply_golden()
-	EventBus.golden_animal_spawned.emit(_golden_animal, "farm_1")
+
+	var chosen: Dictionary = weighted[randi() % weighted.size()]
+	_active_golden_farm_id = chosen["farm_id"]
+	_active_golden_col     = chosen["col"]
+	_active_golden_row     = chosen["row"]
+	_active_golden_type    = chosen["type"]
+	_golden_data           = AnimalRegistry.get_animal(_active_golden_type)
+
+	_golden_timer.start(GOLDEN_DURATION)
+	# Signal farm.gd (and farm_overview, hud) about golden spawn
+	EventBus.golden_animal_spawned_on_farm.emit(_active_golden_farm_id)
+	# farm.gd's _on_golden_animal_on_farm will call apply_visuals_to() if active farm matches
 
 
-# ── Apply / remove golden state ────────────────────────────────────────────────
+# ── Apply / remove golden visuals ─────────────────────────────────────────────
 
 func _apply_golden() -> void:
 	_golden_animal.set_meta("is_golden", true)
 	_tint_meshes(_golden_animal)
 	_spawn_ring()
-	_spawn_countdown()
+	_spawn_countdown(ceili(_golden_timer.time_left))
 	_start_pulse()
 	_add_input_area()
-	_golden_timer.start(GOLDEN_DURATION)
 
 
-func _cleanup() -> void:
-	_golden_timer.stop()
+func _clear_visual_only() -> void:
+	# Removes 3D effects without stopping the timer or clearing session state
 	if _pulse_tween:
 		_pulse_tween.kill()
 		_pulse_tween = null
@@ -117,8 +173,35 @@ func _cleanup() -> void:
 	_pulse_ring    = null
 	_input_area    = null
 	_golden_animal = null
-	_golden_data   = null
 	_orig_mats.clear()
+
+
+func _cleanup() -> void:
+	_golden_timer.stop()
+	if _pulse_tween:
+		_pulse_tween.kill()
+		_pulse_tween = null
+	if is_instance_valid(_golden_animal):
+		_golden_animal.set_meta("is_golden", false)
+		_restore_meshes()
+		var s: float = _golden_data.scale if _golden_data else 1.0
+		_golden_animal.scale = Vector3.ONE * s
+		if is_instance_valid(_countdown_lbl):
+			_countdown_lbl.queue_free()
+		if is_instance_valid(_pulse_ring):
+			_pulse_ring.queue_free()
+		if is_instance_valid(_input_area):
+			_input_area.queue_free()
+	_countdown_lbl         = null
+	_pulse_ring            = null
+	_input_area            = null
+	_golden_animal         = null
+	_golden_data           = null
+	_orig_mats.clear()
+	_active_golden_farm_id = ""
+	_active_golden_col     = -1
+	_active_golden_row     = -1
+	_active_golden_type    = ""
 
 
 # ── Mesh tinting ───────────────────────────────────────────────────────────────
@@ -178,7 +261,7 @@ func _spawn_ring() -> void:
 		.set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_SINE)
 
 
-func _spawn_countdown() -> void:
+func _spawn_countdown(start_secs: int = int(GOLDEN_DURATION)) -> void:
 	_countdown_lbl                  = Label3D.new()
 	_countdown_lbl.billboard        = BaseMaterial3D.BILLBOARD_ENABLED
 	_countdown_lbl.no_depth_test    = true
@@ -190,7 +273,7 @@ func _spawn_countdown() -> void:
 	_countdown_lbl.double_sided     = true
 	_countdown_lbl.position         = Vector3(0, 1.2, 0)
 	_golden_animal.add_child(_countdown_lbl)
-	_tick_countdown(int(GOLDEN_DURATION))
+	_tick_countdown(start_secs)
 
 
 func _tick_countdown(remaining: int) -> void:
@@ -261,8 +344,16 @@ func _collect() -> void:
 	, CONNECT_ONE_SHOT)
 
 
-func force_cleanup() -> void:
+func on_farm_leaving() -> void:
+	# Called by farm.gd when leaving the active farm view; preserves golden session state
+	_placed_animals.clear()
+	_spawn_timer.stop()
 	if _golden_animal != null:
+		_clear_visual_only()
+
+
+func force_cleanup() -> void:
+	if is_active():
 		EventBus.golden_animal_expired.emit()
 		_cleanup()
 	_placed_animals.clear()

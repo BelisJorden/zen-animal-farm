@@ -20,11 +20,13 @@ const COLOR_TEXT_DIM   := Color(0.28, 0.20, 0.38, 0.55)
 var _tabs: Array[Button] = []
 var _active_tab: String  = "farm"
 
-var _golden_bar:       PanelContainer = null
-var _golden_cnt_label: Label          = null
-var _golden_remaining: int            = 0
-var _golden_tick:      Timer          = null
-var _animal_panel                     = null
+var _golden_bar:        PanelContainer = null
+var _golden_icon_label: Label          = null
+var _golden_cnt_label:  Label          = null
+var _golden_remaining:  int            = 0
+var _golden_farm_id:    String         = ""
+var _golden_tick:       Timer          = null
+var _animal_panel                      = null
 
 
 func _ready() -> void:
@@ -119,9 +121,10 @@ func _connect_signals() -> void:
 	EventBus.notification_requested.connect(show_notification)
 	EventBus.placing_mode_entered.connect(func(_d): _set_placing_mode(true))
 	EventBus.placing_mode_exited.connect(func(): _set_placing_mode(false))
-	EventBus.golden_animal_spawned.connect(_on_golden_spawned)
+	EventBus.golden_animal_spawned_on_farm.connect(_on_golden_spawned_on_farm)
 	EventBus.golden_animal_collected.connect(func(_c, _s): _hide_golden_bar())
 	EventBus.golden_animal_expired.connect(_hide_golden_bar)
+	EventBus.farm_changed.connect(_on_farm_changed_hud)
 	EventBus.quests_updated.connect(_rebuild_quest_cards)
 	EventBus.quest_progress_updated.connect(_on_quest_progress_updated)
 	EventBus.quest_completed.connect(_on_quest_completed)
@@ -331,10 +334,10 @@ func _setup_golden_bar() -> void:
 	var hbox := HBoxContainer.new()
 	hbox.add_theme_constant_override("separation", 7)
 
-	var icon := Label.new()
-	icon.text = "✦ golden animal"
-	icon.add_theme_color_override("font_color", Color(1.0, 0.97, 0.75))
-	icon.add_theme_font_size_override("font_size", 17)
+	_golden_icon_label = Label.new()
+	_golden_icon_label.text = "✦ golden animal"
+	_golden_icon_label.add_theme_color_override("font_color", Color(1.0, 0.97, 0.75))
+	_golden_icon_label.add_theme_font_size_override("font_size", 17)
 
 	var sep := Label.new()
 	sep.text = "·"
@@ -346,10 +349,13 @@ func _setup_golden_bar() -> void:
 	_golden_cnt_label.add_theme_color_override("font_color", Color(1.0, 0.97, 0.75))
 	_golden_cnt_label.add_theme_font_size_override("font_size", 17)
 
-	hbox.add_child(icon)
+	hbox.add_child(_golden_icon_label)
 	hbox.add_child(sep)
 	hbox.add_child(_golden_cnt_label)
 	_golden_bar.add_child(hbox)
+
+	_golden_bar.mouse_filter = Control.MOUSE_FILTER_STOP
+	_golden_bar.gui_input.connect(_on_golden_bar_input)
 
 	_golden_bar.set_anchors_preset(Control.PRESET_TOP_WIDE)
 	_golden_bar.offset_left   = 155
@@ -365,14 +371,37 @@ func _setup_golden_bar() -> void:
 	add_child(_golden_tick)
 
 
-func _on_golden_spawned(_animal: Node, _farm_id: String) -> void:
+func _on_golden_spawned_on_farm(farm_id: String) -> void:
+	_golden_farm_id   = farm_id
 	_golden_remaining = int(GoldenAnimalManager.GOLDEN_DURATION)
 	_golden_cnt_label.text = "%ds" % _golden_remaining
+	_update_golden_bar_text()
 	_golden_bar.visible    = true
 	_golden_bar.modulate.a = 0.0
 	var t := create_tween()
 	t.tween_property(_golden_bar, "modulate:a", 1.0, 0.30)
 	_golden_tick.start()
+
+
+func _on_farm_changed_hud(_farm_id: String) -> void:
+	if _golden_bar.visible and GoldenAnimalManager.is_active():
+		_update_golden_bar_text()
+
+
+func _update_golden_bar_text() -> void:
+	if _golden_farm_id == FarmManager.active_farm_id:
+		_golden_icon_label.text = "✦ golden animal"
+	else:
+		var farm_data: FarmData = FarmManager.get_farm(_golden_farm_id)
+		var farm_name: String = farm_data.name if farm_data else _golden_farm_id
+		_golden_icon_label.text = "✦ golden · %s" % farm_name
+
+
+func _on_golden_bar_input(event: InputEvent) -> void:
+	var pressed: bool = (event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed) \
+		or (event is InputEventScreenTouch and event.pressed)
+	if pressed and _golden_farm_id != FarmManager.active_farm_id:
+		_open_overlay("res://scenes/ui/FarmOverview.tscn")
 
 
 func _on_golden_tick() -> void:

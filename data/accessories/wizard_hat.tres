@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="AccessoryData" format=3 uid="uid://bo7ivn8qov7op"]
+
+[ext_resource type="Script" uid="uid://561xy0v1owbl" path="res://scripts/resources/accessory_data.gd" id="1_804u1"]
+
+[resource]
+script = ExtResource("1_804u1")
+id = "wizard_hat"
+name = "Wizard hat"
+icon_path = "res://assets/models/accesoires/WizardHatUI.png"
+icon_scale = 1.2
+model_path = "res://assets/models/accesoires/WizardHat.obj"
+model_scale = 2.0
+price = 250
+rarity = "rare"
+coin_bonus_percent = 0.5

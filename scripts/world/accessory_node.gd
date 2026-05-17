@@ -8,14 +8,15 @@ func setup(acc: AccessoryData) -> void:
 
 	if acc.model_path != "":
 		var res = load(acc.model_path)
+		var s := Vector3.ONE * 0.4 * acc.model_scale
 		if res is Mesh:
 			var mi := MeshInstance3D.new()
-			mi.mesh = res
-			mi.scale = Vector3.ONE * 0.4
+			mi.mesh  = res
+			mi.scale = s
 			add_child(mi)
 		elif res is PackedScene:
 			var node: Node3D = res.instantiate()
-			node.scale = Vector3.ONE * 0.4
+			node.scale = s
 			add_child(node)
 	else:
 		_make_orb(acc)

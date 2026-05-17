@@ -6,6 +6,7 @@ extends Resource
 @export var icon_path:            String = ""
 @export var icon_scale:           float  = 1.0
 @export var model_path:           String = ""
+@export var model_scale:          float  = 1.0
 @export var attachment:           String = "above_head"
 @export var price:                int    = 0
 @export var price_type:           String = "coins"

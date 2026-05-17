@@ -49,6 +49,7 @@ signal placing_mode_exited()
 signal notification_requested(message: String)
 
 # Golden animal
+signal golden_animal_spawned_on_farm(farm_id: String)
 signal golden_animal_spawned(animal_node: Node, farm_id: String)
 signal golden_animal_collected(amount_coins: int, amount_shards: int)
 signal golden_animal_expired()

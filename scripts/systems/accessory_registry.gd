@@ -3,6 +3,7 @@ extends Node
 const ACCESSORY_PATHS: Array = [
 	"res://data/accessories/golden_crown.tres",
 	"res://data/accessories/mystic_orb.tres",
+	"res://data/accessories/wizard_hat.tres",
 ]
 
 var ACCESSORIES: Dictionary = {}

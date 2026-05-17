@@ -31,6 +31,17 @@ func _ready() -> void:
 	_build_ui()
 	EventBus.farm_unlocked.connect(_on_farm_unlocked)
 	EventBus.coins_changed.connect(_on_coins_changed)
+	print("FarmOverview: connecting golden signal")
+	print("GoldenAnimalManager.is_active(): ", GoldenAnimalManager.is_active())
+	if GoldenAnimalManager.is_active():
+		print("Active golden farm: ", GoldenAnimalManager.get_active_farm_id())
+	EventBus.golden_animal_spawned_on_farm.connect(_on_golden_on_farm)
+	EventBus.golden_animal_collected.connect(func(_c, _s): _remove_golden_badges())
+	EventBus.golden_animal_expired.connect(_remove_golden_badges)
+	if GoldenAnimalManager.is_active():
+		var golden_farm: String = GoldenAnimalManager.get_active_farm_id()
+		print("Showing badge immediately for: ", golden_farm)
+		_on_golden_on_farm(golden_farm)
 
 
 # ── Full-screen layout ────────────────────────────────────────────────────────
@@ -174,26 +185,25 @@ func _build_card(farm: FarmData) -> Control:
 	name_lbl.clip_text = true
 	content.add_child(name_lbl)
 
-	# Status badge
+	# Badge row — holds status pills (active, lock info, golden)
+	var badge_row := HBoxContainer.new()
+	badge_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	badge_row.add_theme_constant_override("separation", 4)
+	wrapper.set_meta("badge_row", badge_row)
+	content.add_child(badge_row)
+
 	if active:
-		var pill := _make_pill("active", Color(0.58, 0.44, 0.78, 0.90))
-		var center := CenterContainer.new()
-		center.add_child(pill)
-		content.add_child(center)
+		badge_row.add_child(_make_pill("active", Color(0.58, 0.44, 0.78, 0.90)))
 	elif not unlocked:
-		var lock_row := HBoxContainer.new()
-		lock_row.alignment = BoxContainer.ALIGNMENT_CENTER
-		lock_row.add_theme_constant_override("separation", 4)
 		var li := Label.new()
 		li.text = "🔒"
 		li.add_theme_font_size_override("font_size", 13)
-		lock_row.add_child(li)
+		badge_row.add_child(li)
 		var pl := Label.new()
 		pl.text = "%s ◎" % _fmt(farm.unlock_cost)
 		pl.add_theme_font_size_override("font_size", 13)
 		pl.add_theme_color_override("font_color", Color(1, 1, 1, 0.85))
-		lock_row.add_child(pl)
-		content.add_child(lock_row)
+		badge_row.add_child(pl)
 
 	var bot_space := Control.new()
 	bot_space.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -463,6 +473,39 @@ func _on_farm_unlocked(farm_id: String) -> void:
 
 func _on_coins_changed(_amount: int) -> void:
 	_refresh_all_btns()
+
+
+func _on_golden_on_farm(farm_id: String) -> void:
+	print("GOLDEN ON FARM RECEIVED: ", farm_id)
+	print("Badge row for farm: ", _get_badge_row_for_farm(farm_id))
+	_remove_golden_badges()
+	if not _cards.has(farm_id):
+		return
+	var wrapper: Control = _cards[farm_id]
+	var badge_row: HBoxContainer = wrapper.get_meta("badge_row", null)
+	if not badge_row:
+		return
+	var pill := _make_pill("✦ golden", Color(0.78, 0.55, 0.06, 0.93))
+	pill.set_meta("is_golden_pill", true)
+	badge_row.add_child(pill)
+
+
+func _get_badge_row_for_farm(farm_id: String) -> HBoxContainer:
+	if not _cards.has(farm_id):
+		return null
+	var wrapper: Control = _cards[farm_id]
+	return wrapper.get_meta("badge_row", null)
+
+
+func _remove_golden_badges() -> void:
+	for farm_id in _cards:
+		var wrapper: Control = _cards[farm_id]
+		var badge_row: HBoxContainer = wrapper.get_meta("badge_row", null)
+		if not badge_row:
+			continue
+		for child in badge_row.get_children():
+			if child.get_meta("is_golden_pill", false):
+				child.queue_free()
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────

@@ -29,8 +29,11 @@ var _rarity_lbl:  Label
 var _stats_lbl:   Label
 var _ctx_lbl:     Label
 var _action_btn:  Button
-var _acc_section: VBoxContainer = null
-var _acc_btns:    Array[Button] = []
+var _acc_section:   VBoxContainer = null
+var _acc_btns:      Array[Button] = []
+var _hint_lbl:      Label  = null
+var _hint_tween:    Tween  = null
+var _tile_selected: bool   = false
 
 
 func _ready() -> void:
@@ -43,6 +46,13 @@ func _ready() -> void:
 		if visible: _refresh_stats())
 	EventBus.accessory_unequipped.connect(func(_f: String, _c: int, _r: int) -> void:
 		if visible: _refresh_stats())
+	EventBus.tab_changed.connect(func(tab: String) -> void:
+		if tab == "farm" and visible and _context == "placing":
+			close())
+	EventBus.tile_selected.connect(func(_c: int, _r: int, _p: Vector3) -> void:
+		_tile_selected = true)
+	EventBus.tile_deselected.connect(func() -> void:
+		_tile_selected = false)
 
 
 # ── Construction ───────────────────────────────────────────────────────────────
@@ -198,8 +208,30 @@ func _add_action_row(parent: Control) -> void:
 	_action_btn.add_theme_color_override("font_color", Color.WHITE)
 	_action_btn.add_theme_color_override("font_color_disabled", Color(0.88, 0.86, 0.92))
 	_action_btn.add_theme_font_size_override("font_size", 16)
-	_action_btn.pressed.connect(func(): action_pressed.emit(_animal_id, _context))
+	_action_btn.pressed.connect(func():
+		if _context == "placing" and not _tile_selected:
+			_show_place_hint()
+			return
+		action_pressed.emit(_animal_id, _context)
+	)
 	row.add_child(_action_btn)
+
+	_hint_lbl = Label.new()
+	_hint_lbl.text                    = "Select a tile on the farm first"
+	_hint_lbl.horizontal_alignment    = HORIZONTAL_ALIGNMENT_CENTER
+	_hint_lbl.add_theme_font_size_override("font_size", 11)
+	_hint_lbl.add_theme_color_override("font_color", Color(0.9, 0.4, 0.2))
+	_hint_lbl.modulate.a              = 0.0
+	parent.add_child(_hint_lbl)
+
+
+func _show_place_hint() -> void:
+	if _hint_tween:
+		_hint_tween.kill()
+	_hint_lbl.modulate.a = 1.0
+	_hint_tween = create_tween()
+	_hint_tween.tween_interval(2.0)
+	_hint_tween.tween_property(_hint_lbl, "modulate:a", 0.0, 0.5)
 
 
 func _pill_style(color: Color) -> StyleBoxFlat:
@@ -233,12 +265,18 @@ func show_panel(animal_id: String, context: String, col: int = -1, row: int = -1
 	if visible:
 		return
 	visible = true
-	mouse_filter       = MOUSE_FILTER_STOP
-	_sheet.offset_top  = -100.0
-	_backdrop.modulate.a = 0.0
+	if _context == "placing":
+		mouse_filter             = MOUSE_FILTER_IGNORE
+		_backdrop.mouse_filter   = MOUSE_FILTER_PASS
+		_backdrop.modulate.a     = 0.0
+	else:
+		mouse_filter             = MOUSE_FILTER_STOP
+		_backdrop.mouse_filter   = MOUSE_FILTER_STOP
+		_backdrop.modulate.a     = 0.0
+	_sheet.offset_top = -100.0
 	var t := create_tween().set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
 	t.tween_property(_sheet, "offset_top", -(h + 100), 0.22)
-	t.parallel().tween_property(_backdrop, "modulate:a", 0.45, 0.22)
+	t.parallel().tween_property(_backdrop, "modulate:a", 0.45 if _context != "placing" else 0.0, 0.22)
 
 
 func close() -> void:

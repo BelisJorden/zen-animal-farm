@@ -44,6 +44,7 @@ func _ready() -> void:
 	EventBus.farm_data_loaded.connect(_restore_placed_animals)
 	EventBus.farm_changed.connect(_on_farm_changed)
 	EventBus.animal_coin_produced.connect(_on_coin_produced)
+	EventBus.golden_animal_spawned_on_farm.connect(_on_golden_animal_on_farm)
 	EventBus.accessory_equipped.connect(_on_accessory_equipped)
 	EventBus.accessory_unequipped.connect(_on_accessory_unequipped)
 	_reload_grid()
@@ -93,6 +94,8 @@ func _handle_tap(screen_pos: Vector2) -> void:
 	var col      := int((world.x + 1.75) / 0.7)
 	var row      := int((world.z + 1.75) / 0.7)
 	if col < 0 or col >= 5 or row < 0 or row >= 5:
+		if _placing_mode:
+			_cancel_placing()
 		return
 	EventBus.tile_tapped.emit(col, row, Vector3(
 		-1.75 + col * 0.7 + 0.35, 0.0, -1.75 + row * 0.7 + 0.35
@@ -107,6 +110,10 @@ func _pan(screen_pos: Vector2) -> void:
 	camera.position = _cam_start + (-right * delta.x + fwd * delta.y) * scale
 
 
+func _cancel_placing() -> void:
+	EventBus.tab_changed.emit("farm")
+
+
 # ── Farm switch ────────────────────────────────────────────────────────────────
 
 func _on_farm_changed(farm_id: String) -> void:
@@ -117,10 +124,28 @@ func _on_farm_changed(farm_id: String) -> void:
 	_reload_grid()
 	_spawn_island()
 	_update_fantasy_particles()
+	_check_apply_golden()
+
+
+func _check_apply_golden() -> void:
+	if not GoldenAnimalManager.is_active():
+		return
+	if GoldenAnimalManager.get_active_farm_id() != FarmManager.active_farm_id:
+		return
+	var key := "%d,%d" % [GoldenAnimalManager.get_active_col(), GoldenAnimalManager.get_active_row()]
+	var node := _animal_at_tile.get(key) as Node3D
+	if node and is_instance_valid(node):
+		GoldenAnimalManager.apply_visuals_to(node)
+
+
+func _on_golden_animal_on_farm(farm_id: String) -> void:
+	if farm_id != FarmManager.active_farm_id:
+		return
+	_check_apply_golden()
 
 
 func _clear_farm() -> void:
-	GoldenAnimalManager.force_cleanup()
+	GoldenAnimalManager.on_farm_leaving()
 	for tween in _bob_tweens.values():
 		if tween:
 			tween.kill()
