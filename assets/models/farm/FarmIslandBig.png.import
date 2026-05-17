@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://f6b53lbl53jd"
 path.bptc="res://.godot/imported/FarmIslandBig.png-02ec0de390f639ef9969439bdacd4cee.bptc.ctex"
+path.astc="res://.godot/imported/FarmIslandBig.png-02ec0de390f639ef9969439bdacd4cee.astc.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/models/farm/FarmIslandBig.png"
-dest_files=["res://.godot/imported/FarmIslandBig.png-02ec0de390f639ef9969439bdacd4cee.bptc.ctex"]
+dest_files=["res://.godot/imported/FarmIslandBig.png-02ec0de390f639ef9969439bdacd4cee.bptc.ctex", "res://.godot/imported/FarmIslandBig.png-02ec0de390f639ef9969439bdacd4cee.astc.ctex"]
 
 [params]
 

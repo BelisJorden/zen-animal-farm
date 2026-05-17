@@ -28,6 +28,9 @@ func save_game() -> void:
 	for farm_id in placed_animals_per_farm:
 		cfg.set_value("farms", farm_id, placed_animals_per_farm[farm_id])
 
+	cfg.set_value("accessories", "equipped", GameState.animal_accessories)
+	cfg.set_value("accessories", "owned",    GameState.owned_accessories)
+
 	QuestManager.save_state(cfg)
 	FarmManager.save_state(cfg)
 
@@ -59,12 +62,15 @@ func load_game() -> bool:
 
 	# Migration from old single-farm save format
 	placed_animals_per_farm.clear()
-	var old_placed = cfg.get_value("farm", "placed", null)
-	if old_placed != null:
-		placed_animals_per_farm["farm_1"] = old_placed
+	if cfg.has_section_key("farm", "placed"):
+		placed_animals_per_farm["farm_1"] = cfg.get_value("farm", "placed")
 	else:
 		for farm in FarmManager.farms:
 			placed_animals_per_farm[farm.id] = cfg.get_value("farms", farm.id, [])
+
+	GameState.animal_accessories = cfg.get_value("accessories", "equipped", {})
+	var raw_owned: Array = cfg.get_value("accessories", "owned", [])
+	GameState.owned_accessories.assign(raw_owned)
 
 	QuestManager.load_state(cfg)
 	FarmManager.load_state(cfg)
@@ -95,8 +101,10 @@ func register_placed_animal(col: int, row: int, type: String) -> void:
 # ── Defaults (fresh start) ────────────────────────────────────────────────────
 
 func _apply_defaults() -> void:
-	placed_animals_per_farm = {}
-	GameState.coins         = 100
+	placed_animals_per_farm      = {}
+	GameState.animal_accessories = {}
+	GameState.owned_accessories  = []
+	GameState.coins              = 100
 	GameState.spirit_shards = 25
 	GameState.unplaced_animals.clear()
 	GameState.purchased_animal_types.clear()

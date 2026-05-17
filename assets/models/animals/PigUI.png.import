@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://cip64g4vei2uw"
 path.bptc="res://.godot/imported/PigUI.png-0d13286ec232d271c975a7198388cef8.bptc.ctex"
+path.astc="res://.godot/imported/PigUI.png-0d13286ec232d271c975a7198388cef8.astc.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/models/animals/PigUI.png"
-dest_files=["res://.godot/imported/PigUI.png-0d13286ec232d271c975a7198388cef8.bptc.ctex"]
+dest_files=["res://.godot/imported/PigUI.png-0d13286ec232d271c975a7198388cef8.bptc.ctex", "res://.godot/imported/PigUI.png-0d13286ec232d271c975a7198388cef8.astc.ctex"]
 
 [params]
 

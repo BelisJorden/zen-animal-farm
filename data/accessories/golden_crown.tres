@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="AccessoryData" format=3 uid="uid://c8dmsd8a1t5qu"]
+
+[ext_resource type="Script" uid="uid://561xy0v1owbl" path="res://scripts/resources/accessory_data.gd" id="1_accdata"]
+
+[resource]
+script = ExtResource("1_accdata")
+id = "golden_crown"
+name = "Golden Crown"
+icon_path = "res://assets/models/accesoires/CrownUI.png"
+icon_scale = 1.4
+model_path = "res://assets/models/accesoires/Crown.obj"
+price = 500
+rarity = "rare"
+coin_bonus_percent = 1.0

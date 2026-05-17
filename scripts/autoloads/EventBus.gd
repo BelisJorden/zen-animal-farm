@@ -13,7 +13,9 @@ signal farm_switch_bounced()
 
 # Animals
 signal animal_coin_produced(farm_id: String, col: int, row: int, amount: int)
-signal animal_tapped(animal: Node)
+signal animal_tapped(animal_id: String, col: int, row: int)
+signal accessory_equipped(farm_id: String, col: int, row: int, accessory_id: String)
+signal accessory_unequipped(farm_id: String, col: int, row: int)
 signal animal_combined(result_animal: Node)
 signal animal_trained(animal: Node)
 signal animal_sent_to_spa(animal: Node)

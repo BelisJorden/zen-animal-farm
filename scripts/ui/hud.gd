@@ -1,5 +1,7 @@
 extends Control
 
+const AnimalDetailPanelScene = preload("res://scenes/ui/components/AnimalDetailPanel.tscn")
+
 const COLOR_LILA       := Color(0.58, 0.44, 0.78)
 const COLOR_LILA_DARK  := Color(0.42, 0.28, 0.65)
 const COLOR_TAB_ACTIVE := Color(0.482, 0.369, 0.655)
@@ -22,6 +24,7 @@ var _golden_bar:       PanelContainer = null
 var _golden_cnt_label: Label          = null
 var _golden_remaining: int            = 0
 var _golden_tick:      Timer          = null
+var _animal_panel                     = null
 
 
 func _ready() -> void:
@@ -37,6 +40,7 @@ func _ready() -> void:
 	_connect_signals()
 	_setup_golden_bar()
 	_setup_farms_btn()
+	_setup_animal_panel()
 	_refresh_coins(GameState.coins)
 	_refresh_cps(AnimalProductionManager.coins_per_second)
 	_set_active_tab("farm")
@@ -121,6 +125,7 @@ func _connect_signals() -> void:
 	EventBus.quests_updated.connect(_rebuild_quest_cards)
 	EventBus.quest_progress_updated.connect(_on_quest_progress_updated)
 	EventBus.quest_completed.connect(_on_quest_completed)
+	EventBus.animal_tapped.connect(_on_animal_tapped)
 
 
 # ── Data refresh ───────────────────────────────────────────────────────────────
@@ -250,6 +255,18 @@ func _set_placing_mode(active: bool) -> void:
 		_set_active_tab("build")
 	else:
 		_set_active_tab("farm")
+
+
+# ── Animal detail panel ────────────────────────────────────────────────────────
+
+func _setup_animal_panel() -> void:
+	_animal_panel = AnimalDetailPanelScene.instantiate()
+	add_child(_animal_panel)
+
+
+func _on_animal_tapped(animal_id: String, col: int, row: int) -> void:
+	if _animal_panel:
+		_animal_panel.show_panel(animal_id, "farm", col, row)
 
 
 # ── Farms button ──────────────────────────────────────────────────────────────

@@ -1,16 +1,15 @@
-[gd_resource type="Resource" script_class="FarmData" format=3]
+[gd_resource type="Resource" script_class="FarmData" format=3 uid="uid://cns0i7mf0ohy3"]
 
-[ext_resource type="Script" path="res://scripts/resources/farm_data.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://555xu4ta345" path="res://scripts/resources/farm_data.gd" id="1_script"]
 
 [resource]
 script = ExtResource("1_script")
 id = "farm_2"
 name = "Mystic Realm"
 unlock_cost = 2000
-grid_size = 5
 theme = "fantasy"
 background_top = Color(0.1, 0.05, 0.2, 1)
 background_mid = Color(0.2, 0.1, 0.35, 1)
 background_bottom = Color(0.35, 0.1, 0.3, 1)
-grid_scene = "res://assets/models/farm/FarmGrid.obj"
-island_scene = "res://assets/models/farm/FarmIslandBig.glb"
+grid_scene = "res://assets/models/farm/FarmGrid2.obj"
+island_scene = "res://assets/models/farm/FarmIsland2.glb"

@@ -24,6 +24,24 @@ var animals: Array[Dictionary] = []
 var unlocked_items: Array[String] = []
 var unplaced_animals: Array[Dictionary] = []       # [{"type": "chicken", "id": "..."}]
 var purchased_animal_types: Array[String] = []     # ordered list of ever-bought types
+var animal_accessories: Dictionary = {}            # "farm_id:col,row" -> accessory_id
+var owned_accessories: Array[String] = []          # list of owned accessory IDs
+
+
+func equip_accessory(farm_id: String, col: int, row: int, accessory_id: String) -> void:
+	var key := "%s:%d,%d" % [farm_id, col, row]
+	animal_accessories[key] = accessory_id
+	EventBus.accessory_equipped.emit(farm_id, col, row, accessory_id)
+
+
+func unequip_accessory(farm_id: String, col: int, row: int) -> void:
+	var key := "%s:%d,%d" % [farm_id, col, row]
+	animal_accessories.erase(key)
+	EventBus.accessory_unequipped.emit(farm_id, col, row)
+
+
+func get_accessory(farm_id: String, col: int, row: int) -> String:
+	return animal_accessories.get("%s:%d,%d" % [farm_id, col, row], "")
 
 
 func add_to_inventory(animal_data: Dictionary) -> void:
@@ -49,6 +67,8 @@ func reset_state() -> void:
 	spirit_shards = 0
 	unplaced_animals.clear()
 	purchased_animal_types.clear()
+	animal_accessories.clear()
+	owned_accessories.clear()
 	EventBus.coins_per_second_changed.emit(0.0)
 
 

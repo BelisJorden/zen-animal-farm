@@ -8,7 +8,7 @@ const LILA_DARK := Color(0.42, 0.31, 0.60)
 const GOLD      := Color(1.00, 0.82, 0.20)
 const DARK      := Color(0.22, 0.16, 0.32)
 
-const CATEGORIES := ["decor", "tiles", "animals", "seeds", "bundles"]
+const CATEGORIES := ["decor", "tiles", "animals", "accessories", "seeds", "bundles"]
 
 const SHOP_ITEMS: Dictionary = {
 	"decor": [
@@ -27,7 +27,8 @@ const SHOP_ITEMS: Dictionary = {
 		{"name": "moss tile",    "price":  70, "currency": "coin", "color": Color(0.42, 0.60, 0.36)},
 		{"name": "zen tile",     "price":   6, "currency": "gem",  "color": Color(0.68, 0.58, 0.80)},
 	],
-	# animals category is loaded dynamically from AnimalRegistry
+	# animals loaded dynamically from AnimalRegistry
+	# accessories loaded dynamically from AccessoryRegistry
 	"seeds": [
 		{"name": "cherry blossom","price":  50, "currency": "coin", "color": Color(0.95, 0.75, 0.82)},
 		{"name": "bamboo",        "price":  35, "currency": "coin", "color": Color(0.45, 0.72, 0.38)},
@@ -44,39 +45,52 @@ const SHOP_ITEMS: Dictionary = {
 
 var _category := "decor"
 var _purchased: Array[String] = []
-var _buy_buttons: Dictionary = {}   # Button -> item Dictionary
+var _buy_buttons: Dictionary = {}
 var _detail_panel = null
 
-var _tab_active:    StyleBoxFlat
-var _tab_idle:      StyleBoxEmpty
-var _card_normal:   StyleBoxFlat
-var _card_owned:    StyleBoxFlat
-var _price_coin:    StyleBoxFlat
-var _price_gem:     StyleBoxFlat
+var _tab_active:     StyleBoxFlat
+var _tab_idle:       StyleBoxEmpty
+var _card_normal:    StyleBoxFlat
+var _card_owned:     StyleBoxFlat
+var _price_coin:     StyleBoxFlat
+var _price_gem:      StyleBoxFlat
+var _price_shard:    StyleBoxFlat
 var _price_disabled: StyleBoxFlat
 
-@onready var coin_label:    Label        = $MainLayout/HeaderBar/CoinRow/CoinLabel
-@onready var tab_row:       HBoxContainer = $MainLayout/CategoryTabs
-@onready var section_label: Label        = $MainLayout/ShopScroll/ShopPad/ShopContent/SectionLabel
-@onready var item_grid:     GridContainer = $MainLayout/ShopScroll/ShopPad/ShopContent/ItemGrid
+@onready var coin_label:    Label          = $MainLayout/HeaderBar/CoinRow/CoinLabel
+@onready var tab_row:       HBoxContainer  = $MainLayout/CategoryTabs
+@onready var section_label: Label          = $MainLayout/ShopScroll/ShopPad/ShopContent/SectionLabel
+@onready var item_grid:     GridContainer  = $MainLayout/ShopScroll/ShopPad/ShopContent/ItemGrid
 @onready var featured:      PanelContainer = $MainLayout/ShopScroll/ShopPad/ShopContent/FeaturedBanner
 
 
 func _ready() -> void:
 	_build_styles()
 	featured.add_theme_stylebox_override("panel", _make_sb(LILA, 18))
+	_build_tab_buttons()
 	_update_tabs()
 	_build_grid()
 	$MainLayout/HeaderBar/BackBtn.pressed.connect(_on_back_pressed)
-	for i in CATEGORIES.size():
-		var btn: Button = tab_row.get_child(i)
-		var cat: String = CATEGORIES[i]
-		btn.pressed.connect(func(): _select_category(cat))
 	EventBus.coins_changed.connect(_on_coins_changed)
 	_on_coins_changed(GameState.coins)
 	_detail_panel = AnimalDetailPanelScene.instantiate()
 	add_child(_detail_panel)
 	_detail_panel.action_pressed.connect(_on_detail_action)
+
+
+func _build_tab_buttons() -> void:
+	for child in tab_row.get_children():
+		child.queue_free()
+	for i in CATEGORIES.size():
+		var btn := Button.new()
+		btn.text = CATEGORIES[i]
+		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		btn.size_flags_vertical   = Control.SIZE_EXPAND_FILL
+		btn.flat = true
+		btn.add_theme_font_size_override("font_size", 12)
+		tab_row.add_child(btn)
+		var cat: String = CATEGORIES[i]
+		btn.pressed.connect(func(): _select_category(cat))
 
 
 func _build_styles() -> void:
@@ -98,6 +112,7 @@ func _build_styles() -> void:
 
 	_price_coin     = _make_sb(Color(1.00, 0.82, 0.20), 12)
 	_price_gem      = _make_sb(LILA, 12)
+	_price_shard    = _make_sb(Color(0.58, 0.44, 0.78, 0.85), 12)
 	_price_disabled = _make_sb(Color(0.78, 0.76, 0.80), 12)
 
 
@@ -118,8 +133,13 @@ func _select_category(cat: String) -> void:
 
 
 func _update_tabs() -> void:
-	for i in CATEGORIES.size():
-		var btn: Button = tab_row.get_child(i)
+	var children := tab_row.get_children()
+	for i in children.size():
+		if i >= CATEGORIES.size():
+			break
+		var btn: Button = children[i] as Button
+		if not btn:
+			continue
 		var active: bool = CATEGORIES[i] == _category
 		btn.add_theme_stylebox_override("normal",  _tab_active if active else _tab_idle)
 		btn.add_theme_stylebox_override("hover",   _tab_active if active else _tab_idle)
@@ -132,6 +152,8 @@ func _build_grid() -> void:
 	for child in item_grid.get_children():
 		child.queue_free()
 	section_label.text = _category
+	featured.visible   = (_category != "accessories")
+
 	if _category == "animals":
 		for animal in AnimalRegistry.get_all():
 			var item := {
@@ -143,16 +165,53 @@ func _build_grid() -> void:
 				"is_animal":  true,
 			}
 			item_grid.add_child(_make_card(item))
+	elif _category == "accessories":
+		for acc in AccessoryRegistry.get_all():
+			var item := {
+				"name":         acc.id,
+				"display_name": acc.name,
+				"price":        acc.price,
+				"currency":     acc.price_type,
+				"color":        _rarity_color(acc.rarity),
+				"rarity":       acc.rarity,
+				"is_accessory": true,
+				"bonus_text":   _acc_bonus_text(acc),
+				"image_path":   acc.icon_path,
+			"icon_scale":   acc.icon_scale,
+			}
+			item_grid.add_child(_make_card(item))
 	else:
 		var items: Array = SHOP_ITEMS.get(_category, [])
 		for item in items:
 			item_grid.add_child(_make_card(item))
 
 
+func _rarity_color(rarity: String) -> Color:
+	match rarity:
+		"mystic": return Color(0.58, 0.44, 0.78)
+		"rare":   return Color(1.00, 0.82, 0.20)
+		_:        return Color(0.70, 0.68, 0.65)
+
+
+func _acc_bonus_text(acc: AccessoryData) -> String:
+	var parts: Array[String] = []
+	if acc.coin_bonus_percent > 0.0:
+		parts.append("+%d%% coins" % int(acc.coin_bonus_percent * 100))
+	if acc.golden_chance_bonus > 0.0:
+		parts.append("+%d%% golden" % int(acc.golden_chance_bonus * 100))
+	return "\n".join(parts)
+
+
 func _make_card(item: Dictionary) -> Control:
-	var owned:     bool = item["name"] in _purchased
-	var is_gem:    bool = item["currency"] == "gem"
-	var is_animal: bool = item.get("is_animal", false)
+	var is_accessory: bool = item.get("is_accessory", false)
+	var is_animal:    bool = item.get("is_animal", false)
+	var owned: bool
+	if is_accessory:
+		owned = item["name"] in GameState.owned_accessories
+	else:
+		owned = item["name"] in _purchased
+	var is_gem:   bool = item["currency"] == "gem"
+	var is_shard: bool = item["currency"] == "shard"
 
 	var card := PanelContainer.new()
 	card.add_theme_stylebox_override("panel", _card_owned if owned else _card_normal)
@@ -162,7 +221,7 @@ func _make_card(item: Dictionary) -> Control:
 	vbox.add_theme_constant_override("separation", 6)
 	card.add_child(vbox)
 
-	# colour preview
+	# Preview area
 	var pad := MarginContainer.new()
 	pad.add_theme_constant_override("margin_left",  8)
 	pad.add_theme_constant_override("margin_right", 8)
@@ -170,9 +229,11 @@ func _make_card(item: Dictionary) -> Control:
 	vbox.add_child(pad)
 
 	var image_path: String = item.get("image_path", "")
+	var icon_scale: float  = item.get("icon_scale", 1.0)
 	var preview := Panel.new()
-	preview.custom_minimum_size = Vector2(0, 88)
+	preview.custom_minimum_size   = Vector2(0, 88)
 	preview.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	preview.clip_contents         = true
 	var bg_color: Color = Color(0.96, 0.94, 0.92) if image_path != "" else item.get("color", Color.WHITE)
 	preview.add_theme_stylebox_override("panel", _make_sb(bg_color, 10))
 	pad.add_child(preview)
@@ -180,16 +241,32 @@ func _make_card(item: Dictionary) -> Control:
 	if image_path != "":
 		var tex_rect := TextureRect.new()
 		tex_rect.texture      = load(image_path)
-		tex_rect.expand_mode  = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+		tex_rect.expand_mode  = TextureRect.EXPAND_IGNORE_SIZE
 		tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		tex_rect.layout_mode  = 1
+		tex_rect.anchor_left   = 0.0
+		tex_rect.anchor_top    = 0.0
 		tex_rect.anchor_right  = 1.0
 		tex_rect.anchor_bottom = 1.0
+		var inset: float = round((1.0 - icon_scale) * 40.0)
+		tex_rect.offset_left   = inset
+		tex_rect.offset_top    = inset
+		tex_rect.offset_right  = -inset
+		tex_rect.offset_bottom = -inset
 		preview.add_child(tex_rect)
+	elif is_accessory:
+		var center := CenterContainer.new()
+		center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		preview.add_child(center)
+		var icon := Label.new()
+		icon.text = "✦"
+		icon.add_theme_font_size_override("font_size", 32)
+		icon.add_theme_color_override("font_color", _rarity_color(item.get("rarity", "common")))
+		center.add_child(icon)
 
-	# name
+	# Name label
 	var name_lbl := Label.new()
-	name_lbl.text = item["name"]
+	name_lbl.text = item.get("display_name", item["name"])
 	name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	name_lbl.add_theme_font_size_override("font_size", 12)
 	name_lbl.add_theme_color_override("font_color", DARK)
@@ -197,7 +274,19 @@ func _make_card(item: Dictionary) -> Control:
 	name_lbl.clip_text = true
 	vbox.add_child(name_lbl)
 
-	# price / owned / tap-to-detail
+	# Bonus text for accessories
+	if is_accessory:
+		var bonus_str: String = item.get("bonus_text", "")
+		if bonus_str != "":
+			var bonus_lbl := Label.new()
+			bonus_lbl.text = bonus_str
+			bonus_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			bonus_lbl.add_theme_font_size_override("font_size", 10)
+			bonus_lbl.add_theme_color_override("font_color", Color(0.40, 0.36, 0.50))
+			bonus_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			vbox.add_child(bonus_lbl)
+
+	# Price / owned button area
 	if is_animal:
 		var btn_pad := MarginContainer.new()
 		btn_pad.add_theme_constant_override("margin_left",   8)
@@ -216,7 +305,6 @@ func _make_card(item: Dictionary) -> Control:
 		price_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		btn_pad.add_child(price_lbl)
 
-		# Whole card opens the detail panel
 		card.mouse_filter = Control.MOUSE_FILTER_STOP
 		card.gui_input.connect(func(e: InputEvent) -> void:
 			if (e is InputEventMouseButton and e.pressed and e.button_index == MOUSE_BUTTON_LEFT) \
@@ -239,20 +327,38 @@ func _make_card(item: Dictionary) -> Control:
 			btn_pad.add_child(lbl)
 		else:
 			var price_btn := Button.new()
-			price_btn.text = ("* " if is_gem else "o ") + str(item["price"])
+			if is_shard:
+				price_btn.text = "✦ " + str(item["price"])
+			elif is_gem:
+				price_btn.text = "* " + str(item["price"])
+			else:
+				price_btn.text = "o " + str(item["price"])
 			price_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			price_btn.add_theme_font_size_override("font_size", 13)
-			var txt_col := DARK if is_gem else Color(0.20, 0.14, 0.06)
+			var txt_col := DARK if (is_gem or is_shard) else Color(0.20, 0.14, 0.06)
 			price_btn.add_theme_color_override("font_color", txt_col)
-			var pill := _price_gem if is_gem else _price_coin
+			var pill: StyleBoxFlat
+			if is_shard:
+				pill = _price_shard
+			elif is_gem:
+				pill = _price_gem
+			else:
+				pill = _price_coin
 			for state in ["normal", "hover", "pressed", "focus"]:
 				price_btn.add_theme_stylebox_override(state, pill)
 			price_btn.add_theme_stylebox_override("disabled", _price_disabled)
 			price_btn.add_theme_color_override("font_color_disabled", Color(0.50, 0.48, 0.52))
-			if not is_gem:
-				_buy_buttons[price_btn] = item
-				price_btn.disabled = GameState.coins < item["price"]
-			price_btn.pressed.connect(func(): _on_buy(item, card, btn_pad, price_btn))
+			if is_accessory:
+				if is_shard:
+					price_btn.disabled = GameState.spirit_shards < item["price"]
+				else:
+					price_btn.disabled = GameState.coins < item["price"]
+				price_btn.pressed.connect(func(): _on_buy_accessory(item, card, btn_pad, price_btn))
+			else:
+				if not is_gem:
+					_buy_buttons[price_btn] = item
+					price_btn.disabled = GameState.coins < item["price"]
+				price_btn.pressed.connect(func(): _on_buy(item, card, btn_pad, price_btn))
 			btn_pad.add_child(price_btn)
 
 	return card
@@ -265,6 +371,26 @@ func _on_buy(item: Dictionary, card: PanelContainer,
 	_purchased.append(item["name"])
 	_buy_buttons.erase(price_btn)
 	GameState.add_to_inventory(item)
+	SaveSystem.save_game()
+	card.add_theme_stylebox_override("panel", _card_owned)
+	price_btn.queue_free()
+	var lbl := Label.new()
+	lbl.text = "owned"
+	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl.add_theme_font_size_override("font_size", 12)
+	lbl.add_theme_color_override("font_color", LILA)
+	btn_pad.add_child(lbl)
+
+
+func _on_buy_accessory(item: Dictionary, card: PanelContainer,
+		btn_pad: MarginContainer, price_btn: Button) -> void:
+	if item["currency"] == "shard":
+		if not GameState.spend_shards(item["price"]):
+			return
+	elif item["currency"] == "coin":
+		if not GameState.spend_coins(item["price"]):
+			return
+	GameState.owned_accessories.append(item["name"])
 	SaveSystem.save_game()
 	card.add_theme_stylebox_override("panel", _card_owned)
 	price_btn.queue_free()

@@ -2,9 +2,9 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dldrwtmm4pb52"
-path.bptc="res://.godot/imported/FarmGrid.png-13ff52b970340eb25acef1f1612be631.bptc.ctex"
-path.astc="res://.godot/imported/FarmGrid.png-13ff52b970340eb25acef1f1612be631.astc.ctex"
+uid="uid://b6rkgje1nx1a5"
+path.bptc="res://.godot/imported/FarmGrid2.png-f3579fadcb473ca9f1b8e30468a1b1c4.bptc.ctex"
+path.astc="res://.godot/imported/FarmGrid2.png-f3579fadcb473ca9f1b8e30468a1b1c4.astc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
@@ -12,8 +12,8 @@ metadata={
 
 [deps]
 
-source_file="res://assets/models/farm/FarmGrid.png"
-dest_files=["res://.godot/imported/FarmGrid.png-13ff52b970340eb25acef1f1612be631.bptc.ctex", "res://.godot/imported/FarmGrid.png-13ff52b970340eb25acef1f1612be631.astc.ctex"]
+source_file="res://assets/models/farm/FarmGrid2.png"
+dest_files=["res://.godot/imported/FarmGrid2.png-f3579fadcb473ca9f1b8e30468a1b1c4.bptc.ctex", "res://.godot/imported/FarmGrid2.png-f3579fadcb473ca9f1b8e30468a1b1c4.astc.ctex"]
 
 [params]
 

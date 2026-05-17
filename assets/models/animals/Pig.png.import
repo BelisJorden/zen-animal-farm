@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://dhvw7f3j7dpw0"
 path.bptc="res://.godot/imported/Pig.png-2177d424110ad150ce8cf7ce0c502e50.bptc.ctex"
+path.astc="res://.godot/imported/Pig.png-2177d424110ad150ce8cf7ce0c502e50.astc.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/models/animals/Pig.png"
-dest_files=["res://.godot/imported/Pig.png-2177d424110ad150ce8cf7ce0c502e50.bptc.ctex"]
+dest_files=["res://.godot/imported/Pig.png-2177d424110ad150ce8cf7ce0c502e50.bptc.ctex", "res://.godot/imported/Pig.png-2177d424110ad150ce8cf7ce0c502e50.astc.ctex"]
 
 [params]
 

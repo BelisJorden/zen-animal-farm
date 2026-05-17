@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="AccessoryData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/accessory_data.gd" id="1_accdata"]
+
+[resource]
+script = ExtResource("1_accdata")
+id = "mystic_orb"
+name = "Mystic Orb"
+icon_path = ""
+model_path = ""
+attachment = "above_head"
+price = 8
+price_type = "shards"
+rarity = "mystic"
+coin_bonus_percent = 0.0
+golden_chance_bonus = 0.1

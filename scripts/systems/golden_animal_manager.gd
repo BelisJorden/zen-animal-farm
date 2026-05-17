@@ -141,8 +141,10 @@ func _tint_meshes(node: Node) -> void:
 
 func _restore_meshes() -> void:
 	for key in _orig_mats.keys():
+		if not is_instance_valid(key):
+			continue
 		var mi := key as MeshInstance3D
-		if is_instance_valid(mi):
+		if mi:
 			mi.material_override = _orig_mats[key]
 	_orig_mats.clear()
 

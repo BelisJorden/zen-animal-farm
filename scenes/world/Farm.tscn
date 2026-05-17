@@ -5,7 +5,8 @@
 [ext_resource type="Script" uid="uid://bbqacvuwjjjv6" path="res://scripts/world/farm_grid.gd" id="3_farmgrid"]
 [ext_resource type="Texture2D" uid="uid://dldrwtmm4pb52" path="res://assets/models/farm/FarmGrid.png" id="4_tex"]
 [ext_resource type="PackedScene" uid="uid://cbplui00en01" path="res://scenes/ui/PlacingUI.tscn" id="5_placing"]
-[ext_resource type="Script" path="res://scripts/ui/tile_highlight_2d.gd" id="6_highlight"]
+[ext_resource type="Script" uid="uid://ttgcvxrf16xn" path="res://scripts/ui/tile_highlight_2d.gd" id="6_highlight"]
+
 [sub_resource type="Environment" id="Environment_1"]
 background_mode = 1
 background_color = Color(0, 0, 0, 0)

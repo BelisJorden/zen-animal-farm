@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://dj7f603m4t1un"
 path.bptc="res://.godot/imported/SheepWhite.png-87331b9db218a1dc90692cacefe9bd9b.bptc.ctex"
+path.astc="res://.godot/imported/SheepWhite.png-87331b9db218a1dc90692cacefe9bd9b.astc.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/models/animals/SheepWhite.png"
-dest_files=["res://.godot/imported/SheepWhite.png-87331b9db218a1dc90692cacefe9bd9b.bptc.ctex"]
+dest_files=["res://.godot/imported/SheepWhite.png-87331b9db218a1dc90692cacefe9bd9b.bptc.ctex", "res://.godot/imported/SheepWhite.png-87331b9db218a1dc90692cacefe9bd9b.astc.ctex"]
 
 [params]
 

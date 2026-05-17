@@ -1,30 +1,31 @@
 extends Node3D
 
 const AnimalData      = preload("res://scripts/resources/animal_data.gd")
+const AccessoryScript = preload("res://scripts/world/accessory_node.gd")
 const PAN_SENSITIVITY := 0.012
 const TAP_MAX_PIXELS  := 12.0
-const SWIPE_MIN_PX    := 80.0   # minimum horizontal pixels to count as swipe
 
-@onready var camera:       Camera3D = $Camera3D
-@onready var animals_root: Node3D   = $AnimalLayer
-@onready var placing_ui             = $PlacingLayer/PlacingUI
-@onready var tile_layer:   Node3D   = $TileLayer
+@onready var camera:       Camera3D        = $Camera3D
+@onready var animals_root: Node3D          = $AnimalLayer
+@onready var placing_ui                    = $PlacingLayer/PlacingUI
+@onready var tile_layer:   Node3D          = $TileLayer
+@onready var farm_grid:    MeshInstance3D  = $FarmGrid
 
 var _placing_mode     := false
 var _selected_animal: AnimalData = null
 var _ghost: MeshInstance3D = null
 
-var _drag_start      := Vector2.ZERO
-var _cam_start       := Vector3.ZERO
-var _is_dragging     := false
-var _swipe_handled   := false
+var _drag_start  := Vector2.ZERO
+var _cam_start   := Vector3.ZERO
+var _is_dragging := false
 
 var _selected_tile_col: int     = -1
 var _selected_tile_row: int     = -1
 var _selected_tile_pos: Vector3 = Vector3.ZERO
 
-var _bob_tweens:     Dictionary = {}  # Node3D -> Tween
-var _animal_at_tile: Dictionary = {}  # "col,row" -> Node3D
+var _bob_tweens:      Dictionary = {}  # Node3D -> Tween
+var _animal_at_tile:  Dictionary = {}  # "col,row" -> Node3D
+var _accessory_nodes: Dictionary = {}  # "col,row" -> Node3D
 
 var _current_island:    Node3D = null
 var _fantasy_orbit:     Node3D = null
@@ -43,6 +44,9 @@ func _ready() -> void:
 	EventBus.farm_data_loaded.connect(_restore_placed_animals)
 	EventBus.farm_changed.connect(_on_farm_changed)
 	EventBus.animal_coin_produced.connect(_on_coin_produced)
+	EventBus.accessory_equipped.connect(_on_accessory_equipped)
+	EventBus.accessory_unequipped.connect(_on_accessory_unequipped)
+	_reload_grid()
 	_spawn_island()
 	SaveSystem.restore_farm.call_deferred()
 	_update_fantasy_particles.call_deferred()
@@ -54,52 +58,29 @@ func _ready() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		if event.pressed:
-			_drag_start    = event.position
-			_cam_start     = camera.position
-			_is_dragging   = true
-			_swipe_handled = false
+			_drag_start  = event.position
+			_cam_start   = camera.position
+			_is_dragging = true
 		else:
 			_is_dragging = false
-			if not _swipe_handled:
-				var delta: Vector2 = event.position - _drag_start
-				if _is_horizontal_swipe(delta):
-					_swipe_handled = true
-					_handle_swipe(delta.x)
-				elif event.position.distance_to(_drag_start) < TAP_MAX_PIXELS:
-					_handle_tap(event.position)
+			if event.position.distance_to(_drag_start) < TAP_MAX_PIXELS:
+				_handle_tap(event.position)
 
 	elif event is InputEventMouseMotion and _is_dragging:
 		_pan(event.position)
 
 	elif event is InputEventScreenTouch:
 		if event.pressed:
-			_drag_start    = event.position
-			_cam_start     = camera.position
-			_is_dragging   = true
-			_swipe_handled = false
+			_drag_start  = event.position
+			_cam_start   = camera.position
+			_is_dragging = true
 		else:
 			_is_dragging = false
-			if not _swipe_handled:
-				var delta: Vector2 = event.position - _drag_start
-				if _is_horizontal_swipe(delta):
-					_swipe_handled = true
-					_handle_swipe(delta.x)
-				elif event.position.distance_to(_drag_start) < TAP_MAX_PIXELS:
-					_handle_tap(event.position)
+			if event.position.distance_to(_drag_start) < TAP_MAX_PIXELS:
+				_handle_tap(event.position)
 
 	elif event is InputEventScreenDrag:
 		_pan(event.position)
-
-
-func _is_horizontal_swipe(delta: Vector2) -> bool:
-	return abs(delta.x) >= SWIPE_MIN_PX and abs(delta.y) < abs(delta.x) * 0.7
-
-
-func _handle_swipe(dx: float) -> void:
-	if dx > 0:
-		FarmManager.switch_to_prev_farm()
-	else:
-		FarmManager.switch_to_next_farm()
 
 
 func _handle_tap(screen_pos: Vector2) -> void:
@@ -133,6 +114,7 @@ func _on_farm_changed(farm_id: String) -> void:
 	_clear_farm()
 	var placed := SaveSystem.get_placed_animals(farm_id)
 	_restore_placed_animals(placed)
+	_reload_grid()
 	_spawn_island()
 	_update_fantasy_particles()
 
@@ -144,10 +126,28 @@ func _clear_farm() -> void:
 			tween.kill()
 	_bob_tweens.clear()
 	_animal_at_tile.clear()
+	_accessory_nodes.clear()
 	for child in animals_root.get_children():
 		child.queue_free()
 	tile_layer.clear_all()
 	_clear_tile_selection()
+
+
+func _reload_grid() -> void:
+	var farm_data: FarmData = FarmManager.get_active_farm()
+	if not farm_data or farm_data.grid_scene.is_empty():
+		return
+	var mesh_res = load(farm_data.grid_scene)
+	if not mesh_res is Mesh:
+		return
+	farm_grid.mesh = mesh_res
+	var tex_path := farm_data.grid_scene.get_basename() + ".png"
+	if ResourceLoader.exists(tex_path):
+		var mat := StandardMaterial3D.new()
+		mat.albedo_texture = load(tex_path)
+		farm_grid.set_surface_override_material(0, mat)
+	else:
+		farm_grid.set_surface_override_material(0, null)
 
 
 func _spawn_island() -> void:
@@ -260,6 +260,7 @@ func _spawn_ghost(animal: AnimalData) -> void:
 
 
 func _restore_placed_animals(placed: Array) -> void:
+	var farm_id := FarmManager.active_farm_id
 	for entry in placed:
 		var col:  int    = entry.get("col", -1)
 		var row:  int    = entry.get("row", -1)
@@ -275,6 +276,9 @@ func _restore_placed_animals(placed: Array) -> void:
 		var tile_pos := Vector3(-1.75 + col * 0.7 + 0.35, 0.0, -1.75 + row * 0.7 + 0.35)
 		var node := _spawn_animal(tile_pos, animal, false)
 		_animal_at_tile["%d,%d" % [col, row]] = node
+		var acc_id := GameState.get_accessory(farm_id, col, row)
+		if acc_id != "":
+			_spawn_accessory_node(col, row, acc_id, node)
 
 
 func _spawn_animal(tile_pos: Vector3, animal: AnimalData, animate: bool = true) -> Node3D:
@@ -328,6 +332,48 @@ func _anim_bob(node: Node3D) -> void:
 	_bob_tweens[node] = t
 
 
+# ── Accessory nodes ────────────────────────────────────────────────────────────
+
+func _spawn_accessory_node(col: int, row: int, acc_id: String, animal_node: Node3D) -> void:
+	var key := "%d,%d" % [col, row]
+	if _accessory_nodes.has(key):
+		var old: Node3D = _accessory_nodes[key]
+		if is_instance_valid(old):
+			old.queue_free()
+		_accessory_nodes.erase(key)
+	var acc: AccessoryData = AccessoryRegistry.get_accessory(acc_id)
+	if not acc:
+		return
+	var acc_node := Node3D.new()
+	acc_node.set_script(AccessoryScript)
+	animal_node.add_child(acc_node)
+	acc_node.setup(acc)
+	_accessory_nodes[key] = acc_node
+
+
+func _remove_accessory_node(col: int, row: int) -> void:
+	var key := "%d,%d" % [col, row]
+	if _accessory_nodes.has(key):
+		var node: Node3D = _accessory_nodes[key]
+		if is_instance_valid(node):
+			node.queue_free()
+		_accessory_nodes.erase(key)
+
+
+func _on_accessory_equipped(farm_id: String, col: int, row: int, acc_id: String) -> void:
+	if farm_id != FarmManager.active_farm_id:
+		return
+	var animal_node: Node3D = _animal_at_tile.get("%d,%d" % [col, row])
+	if animal_node and is_instance_valid(animal_node):
+		_spawn_accessory_node(col, row, acc_id, animal_node)
+
+
+func _on_accessory_unequipped(farm_id: String, col: int, row: int) -> void:
+	if farm_id != FarmManager.active_farm_id:
+		return
+	_remove_accessory_node(col, row)
+
+
 # ── Tile tap & selection ──────────────────────────────────────────────────────
 
 func _on_tile_tapped(col: int, row: int, world_pos: Vector3) -> void:
@@ -335,6 +381,10 @@ func _on_tile_tapped(col: int, row: int, world_pos: Vector3) -> void:
 		var node := _animal_at_tile.get("%d,%d" % [col, row]) as Node3D
 		if node and is_instance_valid(node):
 			_anim_tap(node)
+			if not _placing_mode:
+				var data: AnimalData = node.get_meta("animal_data", null)
+				if data:
+					EventBus.animal_tapped.emit(data.id, col, row)
 		else:
 			tile_layer.shake_tile(col, row)
 		return
@@ -401,7 +451,6 @@ func _anim_tap(node: Node3D) -> void:
 	)
 
 	FXManager.spawn_tap_burst(node.global_position)
-	EventBus.animal_tapped.emit(node)
 
 
 # ── HUD refresh on load ───────────────────────────────────────────────────────

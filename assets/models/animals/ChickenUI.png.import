@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://p6nodtoudwe8"
 path.bptc="res://.godot/imported/ChickenUI.png-646ccbea23534ec6bd978347a9169aa4.bptc.ctex"
+path.astc="res://.godot/imported/ChickenUI.png-646ccbea23534ec6bd978347a9169aa4.astc.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/models/animals/ChickenUI.png"
-dest_files=["res://.godot/imported/ChickenUI.png-646ccbea23534ec6bd978347a9169aa4.bptc.ctex"]
+dest_files=["res://.godot/imported/ChickenUI.png-646ccbea23534ec6bd978347a9169aa4.bptc.ctex", "res://.godot/imported/ChickenUI.png-646ccbea23534ec6bd978347a9169aa4.astc.ctex"]
 
 [params]
 

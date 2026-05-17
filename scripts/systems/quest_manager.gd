@@ -121,7 +121,7 @@ func _on_animal_hatched(_id: String, _rarity: String) -> void:
 	_track_progress("hatch_eggs", 1)
 
 
-func _on_animal_tapped(_animal: Node) -> void:
+func _on_animal_tapped(_animal_id: String, _col: int, _row: int) -> void:
 	_track_progress("tap_animals", 1)
 
 

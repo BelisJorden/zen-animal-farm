@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://buiugg8rfenl"
 path.bptc="res://.godot/imported/DragonUI.png-bf0ee8f6dbe5f90fa2d8b7f01d2bd7b2.bptc.ctex"
+path.astc="res://.godot/imported/DragonUI.png-bf0ee8f6dbe5f90fa2d8b7f01d2bd7b2.astc.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/models/animals/DragonUI.png"
-dest_files=["res://.godot/imported/DragonUI.png-bf0ee8f6dbe5f90fa2d8b7f01d2bd7b2.bptc.ctex"]
+dest_files=["res://.godot/imported/DragonUI.png-bf0ee8f6dbe5f90fa2d8b7f01d2bd7b2.bptc.ctex", "res://.godot/imported/DragonUI.png-bf0ee8f6dbe5f90fa2d8b7f01d2bd7b2.astc.ctex"]
 
 [params]
 

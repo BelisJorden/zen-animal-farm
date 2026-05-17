@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://bstqeg5t030i5"
 path.bptc="res://.godot/imported/ChickenClaudeDesign.png-3aca9ed82c77b21f7187e0d7eb9b5c35.bptc.ctex"
+path.astc="res://.godot/imported/ChickenClaudeDesign.png-3aca9ed82c77b21f7187e0d7eb9b5c35.astc.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/models/animals/ChickenClaudeDesign.png"
-dest_files=["res://.godot/imported/ChickenClaudeDesign.png-3aca9ed82c77b21f7187e0d7eb9b5c35.bptc.ctex"]
+dest_files=["res://.godot/imported/ChickenClaudeDesign.png-3aca9ed82c77b21f7187e0d7eb9b5c35.bptc.ctex", "res://.godot/imported/ChickenClaudeDesign.png-3aca9ed82c77b21f7187e0d7eb9b5c35.astc.ctex"]
 
 [params]
 
