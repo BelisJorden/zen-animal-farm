@@ -86,6 +86,14 @@ func shake_tile(col: int, row: int) -> void:
 	)
 
 
+func clear_all() -> void:
+	_occupied.clear()
+	_selected_col = -1
+	_selected_row = -1
+	if _tile_highlight and _tile_highlight.visible:
+		_tile_highlight.hide_highlight()
+
+
 # ── Private ───────────────────────────────────────────────────────────────────
 
 func _make_marker() -> MeshInstance3D:

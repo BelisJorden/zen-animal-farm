@@ -8,8 +8,11 @@ signal tile_selected(col: int, row: int, world_pos: Vector3)
 signal tile_deselected()
 signal tile_tapped(col: int, row: int, world_pos: Vector3)
 signal farm_unlocked(farm_id: String)
+signal farm_changed(farm_id: String)
+signal farm_switch_bounced()
 
 # Animals
+signal animal_coin_produced(farm_id: String, col: int, row: int, amount: int)
 signal animal_tapped(animal: Node)
 signal animal_combined(result_animal: Node)
 signal animal_trained(animal: Node)

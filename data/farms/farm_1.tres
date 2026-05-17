@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="FarmData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/farm_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "farm_1"
+name = "Zen Farm"
+unlock_cost = 0
+grid_size = 5
+theme = "zen"
+background_top = Color(0.769, 0.682, 0.867, 1)
+background_mid = Color(0.867, 0.722, 0.769, 1)
+background_bottom = Color(0.941, 0.835, 0.722, 1)
+grid_scene = "res://assets/models/farm/FarmGrid.obj"
+island_scene = "res://assets/models/farm/FarmIslandBig.glb"

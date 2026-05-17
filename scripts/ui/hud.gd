@@ -36,7 +36,9 @@ func _ready() -> void:
 	_setup_tabs()
 	_connect_signals()
 	_setup_golden_bar()
+	_setup_farms_btn()
 	_refresh_coins(GameState.coins)
+	_refresh_cps(AnimalProductionManager.coins_per_second)
 	_set_active_tab("farm")
 	_rebuild_quest_cards()
 
@@ -248,6 +250,47 @@ func _set_placing_mode(active: bool) -> void:
 		_set_active_tab("build")
 	else:
 		_set_active_tab("farm")
+
+
+# ── Farms button ──────────────────────────────────────────────────────────────
+
+func _setup_farms_btn() -> void:
+	var btn := Button.new()
+	btn.text = "⊞"
+	btn.flat = false
+	btn.add_theme_font_size_override("font_size", 20)
+	btn.add_theme_color_override("font_color", Color(0.58, 0.44, 0.78))
+	btn.custom_minimum_size = Vector2(44, 44)
+
+	var s := StyleBoxFlat.new()
+	s.bg_color                   = Color(1, 1, 1, 0.88)
+	s.corner_radius_top_left     = 12
+	s.corner_radius_top_right    = 12
+	s.corner_radius_bottom_left  = 12
+	s.corner_radius_bottom_right = 12
+	btn.add_theme_stylebox_override("normal",  s)
+	var sh := StyleBoxFlat.new()
+	sh.bg_color                   = Color(0.92, 0.88, 0.98, 0.95)
+	sh.corner_radius_top_left     = 12
+	sh.corner_radius_top_right    = 12
+	sh.corner_radius_bottom_left  = 12
+	sh.corner_radius_bottom_right = 12
+	btn.add_theme_stylebox_override("hover",   sh)
+	var sp := StyleBoxFlat.new()
+	sp.bg_color                   = Color(0.82, 0.76, 0.94, 0.95)
+	sp.corner_radius_top_left     = 12
+	sp.corner_radius_top_right    = 12
+	sp.corner_radius_bottom_left  = 12
+	sp.corner_radius_bottom_right = 12
+	btn.add_theme_stylebox_override("pressed", sp)
+
+	btn.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	btn.offset_left   = 16
+	btn.offset_top    = 16
+	btn.offset_right  = 60
+	btn.offset_bottom = 60
+	btn.pressed.connect(func(): _open_overlay("res://scenes/ui/FarmOverview.tscn"))
+	add_child(btn)
 
 
 # ── Golden animal indicator ────────────────────────────────────────────────────

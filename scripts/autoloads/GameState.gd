@@ -44,21 +44,11 @@ func remove_from_inventory(type_name: String) -> bool:
 	return false
 
 
-var _total_cps: float = 0.0
-
-
-func add_placed_animal_cps(coin_amount: int, coin_rate: float) -> void:
-	if coin_rate > 0.0:
-		_total_cps += coin_amount / coin_rate
-		EventBus.coins_per_second_changed.emit(_total_cps)
-
-
 func reset_state() -> void:
 	coins         = 0
 	spirit_shards = 0
 	unplaced_animals.clear()
 	purchased_animal_types.clear()
-	_total_cps    = 0.0
 	EventBus.coins_per_second_changed.emit(0.0)
 
 

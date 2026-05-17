@@ -278,6 +278,8 @@ signal tile_deselected()
 signal animal_placed(animal: Node)
 signal animal_removed(animal: Node)
 signal farm_unlocked(farm_id: String)
+signal farm_changed(farm_id: String)
+signal farm_switch_bounced()
 
 # Resources
 signal coins_earned(amount: int)
@@ -295,6 +297,8 @@ signal inventory_changed
 signal notification_requested(message: String)
 
 # Animals
+signal animal_coin_produced(farm_id: String, col: int, row: int, amount: int)
+signal animal_tapped(animal: Node)
 signal animal_combined(result_animal: Node)
 signal animal_trained(animal: Node)
 signal animal_sent_to_spa(animal: Node)
@@ -304,9 +308,6 @@ signal animal_returned_from_spa(animal: Node)
 signal egg_tapped(progress: int)
 signal egg_hatched(animal_data: Dictionary)
 signal animal_hatched(animal_id: String, rarity: String)
-
-# Animals
-signal animal_tapped(animal: Node)
 
 # Quests
 signal quest_progress_updated(quest_id: String, current: int, target: int)
@@ -323,6 +324,8 @@ signal quests_updated()
 - **GameState autoload** voor globale data (coins, inventory, farm data)
 - **AnimalRegistry autoload** — `extends Node` met `_ready()` en hardcoded `ANIMAL_PATHS`; **niet preloaden** in andere scripts — gebruik direct als singleton. Noodzakelijk voor Android (DirAccess werkt niet in APK exports)
 - **FXManager autoload** — Node, beheert visuele effecten; `set_fx_root(node)` aanroepen vanuit de scene die FX wil spawnen
+- **FarmManager autoload** — laadt `FarmData` .tres resources, beheert `unlocked_farms` en `active_farm_id`; `save_state`/`load_state` via ConfigFile
+- **AnimalProductionManager autoload** — beheert één Timer per geplaatst dier over **alle** farms; timers leven op de autoload node zodat coins doortellen ook als de farm niet zichtbaar is. `coins_per_second: float` property altijd up-to-date. `load_all_farms(dict)` aanroepen vanuit SaveSystem na laden; `register_animal(farm_id, col, row, type)` bij nieuwe plaatsing
 - **QuestManager autoload** — beheert 12 quests in volgorde van moeilijkheid; max 3 actief tegelijk; luistert naar EventBus voor progress; volgorde in project.godot: vóór SaveSystem (zodat SaveSystem save_state/load_state kan aanroepen)
 - **Tweens** voor alle animaties — geen AnimationPlayer voor code-driven animaties
 - Constanten in `UPPERCASE` bovenaan elk script
@@ -428,6 +431,16 @@ Verwijderd: `player_name`, `day`, `level` — niet meer gebruikt.
 | 2026-05-17 | EventBus: `animal_tapped(animal)` geëmit vanuit `farm.gd._anim_tap()` na elke tap animatie. `quest_completed` signature uitgebreid met reward_coins, reward_shards, reward_item. `quests_updated()` signal toegevoegd. |
 | 2026-05-17 | HUD quest balk vervangen: enkelvoudige quest → scrollbare VBoxContainer (QuestList) met 3 dynamische quest cards. Elk card: titel + beloningsoverzicht (◎N ✦N) + progress bar + N/M tekst. Cards gebouwd via `_rebuild_quest_cards()` in hud.gd. |
 | 2026-05-17 | collect_shards tracking: QuestManager luistert naar `shards_changed(new_total)` en berekent delta via `_last_known_shards`. Enkel stijgingen tellen (uitgeven telt niet mee). |
+| 2026-05-17 | Multi-farm systeem geïmplementeerd: `FarmData` Resource (`scripts/resources/farm_data.gd`) met id, name, unlock_cost, theme, background_top/mid/bottom, island_scene. `FarmManager` autoload laadt `data/farms/farm_1.tres` (Zen Farm, gratis) en `data/farms/farm_2.tres` (Mystic Realm, ◎2000, theme="fantasy"). `FarmManager.save_state/load_state` via ConfigFile `[farm_manager]` sectie. |
+| 2026-05-17 | FarmOverview overlay (`scenes/ui/FarmOverview.tscn` + `scripts/ui/farm_overview.gd`): volledig code-gebouwde overlay met horizontale scroll van farm cards. Card: gradient preview (background_mid), naam, actie-knop (current farm/visit/unlock). Knop unlock toont prijs groen als betaalbaar, grijs anders. `_refresh_all_cards()` bij `farm_unlocked` en `coins_changed`. |
+| 2026-05-17 | HUD farms knop: klein "⊞" Button (44×44px) top-left (16px marge), wit afgerond, lila icon. Opent FarmOverview als overlay. Gebouwd via `_setup_farms_btn()` in hud.gd `_ready()`. |
+| 2026-05-17 | Farm wissel via swipe: horizontale swipe (min 80px, dy < dx×0.7) in farm.gd `_unhandled_input` roept `FarmManager.switch_to_next/prev_farm()` aan. `_swipe_handled` flag voorkomt Android double-event. Bij slechts 1 unlocked farm: `farm_switch_bounced` geëmit (geen actie). |
+| 2026-05-17 | Achtergrond gradient bij farm wissel: `farm_screen.gd._on_farm_changed()` fade-out (0.18s) → `_apply_farm_gradient(farm_data)` → fade-in (0.22s). Fantasy particles: `farm.gd._update_fantasy_particles()` spawnt 5 gekleurde "✦" Label3D nodes in langzaam roterende orbit (10s/rotatie) voor theme="fantasy". |
+| 2026-05-17 | Per-farm save data: `SaveSystem.placed_animals_per_farm` Dictionary (farm_id → Array). Migratie van oud enkelvoudig formaat (`[farm]placed` → `placed_animals_per_farm["farm_1"]`). `get_placed_animals(farm_id)` voor ophalen per farm. |
+| 2026-05-17 | GoldenAnimalManager crash fix bij farm wissel: `_clear_farm()` in farm.gd roept `GoldenAnimalManager.force_cleanup()` aan vóór queue_free van animals. `force_cleanup()` stopt timers, emit expired, cleant state en leegt `_placed_animals`. `_restore_meshes()` gebruikt `for key in _orig_mats.keys()` + cast ipv getypeerde loop-variabele (Android crash fix). |
+| 2026-05-17 | AnimalProductionManager: coins tellen op alle farms. Timers leven op autoload (niet op dier Node3D). Bij timeout: `EventBus.coins_earned.emit(amt)` (→ GameState + QuestManager) + `EventBus.animal_coin_produced.emit(farm_id, col, row, amt)`. `farm.gd._on_coin_produced()` toont coin popup enkel als farm_id == actieve farm. Timer nodes niet meer in `_spawn_animal`. `GameState.add_placed_animal_cps()` en `_total_cps` verwijderd. |
+| 2026-05-17 | coins/sec HUD fix: `AnimalProductionManager.coins_per_second` property opgeslagen bij elke `recalculate_cps()` aanroep. `hud.gd._ready()` leest de waarde direct op. `farm.gd._refresh_hud_on_load()` (call_deferred) re-emits `coins_changed`, `coins_per_second_changed` en `shards_changed` zodat HUD altijd correct is na scene load. |
+| 2026-05-17 | Achtergrond gradient fix bij opstarten: `farm_screen.gd._ready()` roept `_apply_farm_gradient(FarmManager.get_active_farm())` aan zonder fade, zodat farm 2 de juiste kleuren toont bij heropstarten. `_apply_farm_gradient(farm_data)` geëxtraheerd als gedeelde functie, gebruikt door zowel init als farm wissel tween. |
 
 ---
 
@@ -514,8 +527,7 @@ var quest_progress:   Dictionary # quest_id -> int (cumulatief)
 ## Nog te beslissen
 - [ ] Exacte productiesnelheid per dier per ster
 - [ ] Welke minigames?
-- [ ] Farm thema's (Japans, winter, fantasy?)
+- [ ] Farm thema's: farm_1 (Zen, lila/roze/beige) + farm_2 (Mystic/fantasy, paars) bestaan; verdere thema's (Japans, winter)?
 - [ ] Monetisatie model (premium / IAP / ads-free?)
 - [ ] Naam definitief: "Zen Farm" of "Zen Animal Farm"?
 - [ ] Dieren combineren: UI flow en regels
-- [ ] Save systeem implementeren

@@ -140,9 +140,10 @@ func _tint_meshes(node: Node) -> void:
 
 
 func _restore_meshes() -> void:
-	for mi: MeshInstance3D in _orig_mats:
+	for key in _orig_mats.keys():
+		var mi := key as MeshInstance3D
 		if is_instance_valid(mi):
-			mi.material_override = _orig_mats[mi]
+			mi.material_override = _orig_mats[key]
 	_orig_mats.clear()
 
 
@@ -256,6 +257,14 @@ func _collect() -> void:
 		if is_instance_valid(node):
 			node.set_meta("tap_cooldown", false)
 	, CONNECT_ONE_SHOT)
+
+
+func force_cleanup() -> void:
+	if _golden_animal != null:
+		EventBus.golden_animal_expired.emit()
+		_cleanup()
+	_placed_animals.clear()
+	_spawn_timer.stop()
 
 
 func _on_expired() -> void:

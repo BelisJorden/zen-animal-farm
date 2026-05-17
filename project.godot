@@ -23,6 +23,8 @@ AnimalRegistry="*res://scripts/autoloads/AnimalRegistry.gd"
 FXManager="*res://scripts/systems/fx_manager.gd"
 GoldenAnimalManager="*res://scripts/systems/golden_animal_manager.gd"
 QuestManager="*res://scripts/systems/quest_manager.gd"
+FarmManager="*res://scripts/systems/farm_manager.gd"
+AnimalProductionManager="*res://scripts/systems/animal_production_manager.gd"
 SaveSystem="*res://scripts/systems/save_system.gd"
 
 [display]
