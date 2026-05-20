@@ -28,6 +28,11 @@ var _golden_farm_id:    String         = ""
 var _golden_tick:       Timer          = null
 var _animal_panel                      = null
 
+var _coin_shower_btn:   Button = null
+var _spirit_shower_btn: Button = null
+var _coin_pulse:        Tween  = null
+var _spirit_pulse:      Tween  = null
+
 
 func _ready() -> void:
 	_tabs = [
@@ -42,6 +47,7 @@ func _ready() -> void:
 	_connect_signals()
 	_setup_golden_bar()
 	_setup_farms_btn()
+	_setup_shower_buttons()
 	_setup_animal_panel()
 	_refresh_coins(GameState.coins)
 	_refresh_cps(AnimalProductionManager.coins_per_second)
@@ -124,6 +130,10 @@ func _connect_signals() -> void:
 	EventBus.golden_animal_spawned_on_farm.connect(_on_golden_spawned_on_farm)
 	EventBus.golden_animal_collected.connect(func(_c, _s): _hide_golden_bar())
 	EventBus.golden_animal_expired.connect(_hide_golden_bar)
+	EventBus.coin_shower_available.connect(_on_coin_shower_available)
+	EventBus.spirit_shower_available.connect(_on_spirit_shower_available)
+	EventBus.coin_shower_gone.connect(_on_coin_shower_gone)
+	EventBus.spirit_shower_gone.connect(_on_spirit_shower_gone)
 	EventBus.farm_changed.connect(_on_farm_changed_hud)
 	EventBus.quests_updated.connect(_rebuild_quest_cards)
 	EventBus.quest_progress_updated.connect(_on_quest_progress_updated)
@@ -358,7 +368,7 @@ func _setup_golden_bar() -> void:
 	_golden_bar.gui_input.connect(_on_golden_bar_input)
 
 	_golden_bar.set_anchors_preset(Control.PRESET_TOP_WIDE)
-	_golden_bar.offset_left   = 155
+	_golden_bar.offset_left   = 172
 	_golden_bar.offset_right  = -155
 	_golden_bar.offset_top    = 16
 	_golden_bar.offset_bottom = 16
@@ -416,3 +426,108 @@ func _hide_golden_bar() -> void:
 	var t := create_tween()
 	t.tween_property(_golden_bar, "modulate:a", 0.0, 0.30)
 	t.tween_callback(func(): _golden_bar.visible = false)
+
+
+# ── Shower buttons ─────────────────────────────────────────────────────────────
+
+func _setup_shower_buttons() -> void:
+	_coin_shower_btn   = _make_shower_btn("☁", Color(0.94, 0.63, 0.05))
+	_spirit_shower_btn = _make_shower_btn("☁", Color(0.58, 0.44, 0.78))
+
+	_coin_shower_btn.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	_coin_shower_btn.offset_left   = 68
+	_coin_shower_btn.offset_top    = 16
+	_coin_shower_btn.offset_right  = 112
+	_coin_shower_btn.offset_bottom = 60
+
+	_spirit_shower_btn.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	_spirit_shower_btn.offset_left   = 120
+	_spirit_shower_btn.offset_top    = 16
+	_spirit_shower_btn.offset_right  = 164
+	_spirit_shower_btn.offset_bottom = 60
+
+	_coin_shower_btn.pressed.connect(_on_coin_shower_btn_pressed)
+	_spirit_shower_btn.pressed.connect(_on_spirit_shower_btn_pressed)
+
+	add_child(_coin_shower_btn)
+	add_child(_spirit_shower_btn)
+
+	if CoinShowerManager.coin_shower_ready:
+		_coin_shower_btn.visible = true
+		_coin_pulse = _start_btn_pulse(_coin_shower_btn)
+	if CoinShowerManager.spirit_shower_ready:
+		_spirit_shower_btn.visible = true
+		_spirit_pulse = _start_btn_pulse(_spirit_shower_btn)
+
+
+func _make_shower_btn(icon: String, color: Color) -> Button:
+	var btn := Button.new()
+	btn.text               = icon
+	btn.flat               = false
+	btn.visible            = false
+	btn.focus_mode         = FOCUS_NONE
+	btn.pivot_offset       = Vector2(22, 22)
+	btn.custom_minimum_size = Vector2(44, 44)
+	btn.add_theme_font_size_override("font_size", 20)
+	btn.add_theme_color_override("font_color", color)
+
+	var sn := StyleBoxFlat.new()
+	sn.bg_color                   = Color(1, 1, 1, 0.88)
+	sn.corner_radius_top_left     = 12
+	sn.corner_radius_top_right    = 12
+	sn.corner_radius_bottom_left  = 12
+	sn.corner_radius_bottom_right = 12
+	btn.add_theme_stylebox_override("normal", sn)
+
+	var sh := sn.duplicate() as StyleBoxFlat
+	sh.bg_color = Color(0.92, 0.88, 0.98, 0.95)
+	btn.add_theme_stylebox_override("hover", sh)
+
+	var sp := sn.duplicate() as StyleBoxFlat
+	sp.bg_color = Color(0.82, 0.76, 0.94, 0.95)
+	btn.add_theme_stylebox_override("pressed", sp)
+
+	return btn
+
+
+func _start_btn_pulse(btn: Button) -> Tween:
+	var t := create_tween().set_loops()
+	t.tween_property(btn, "scale", Vector2(1.12, 1.12), 0.55).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+	t.tween_property(btn, "scale", Vector2.ONE,          0.55).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+	return t
+
+
+func _on_coin_shower_available() -> void:
+	_coin_shower_btn.visible = true
+	_coin_pulse = _start_btn_pulse(_coin_shower_btn)
+
+
+func _on_spirit_shower_available() -> void:
+	_spirit_shower_btn.visible = true
+	_spirit_pulse = _start_btn_pulse(_spirit_shower_btn)
+
+
+func _on_coin_shower_gone() -> void:
+	if _coin_pulse:
+		_coin_pulse.kill()
+		_coin_pulse = null
+	_coin_shower_btn.scale   = Vector2.ONE
+	_coin_shower_btn.visible = false
+
+
+func _on_spirit_shower_gone() -> void:
+	if _spirit_pulse:
+		_spirit_pulse.kill()
+		_spirit_pulse = null
+	_spirit_shower_btn.scale   = Vector2.ONE
+	_spirit_shower_btn.visible = false
+
+
+func _on_coin_shower_btn_pressed() -> void:
+	CoinShowerManager.open_coin_shower()
+	_open_overlay("res://scenes/ui/CoinShowerGame.tscn")
+
+
+func _on_spirit_shower_btn_pressed() -> void:
+	CoinShowerManager.open_spirit_shower()
+	_open_overlay("res://scenes/ui/CoinShowerGame.tscn")

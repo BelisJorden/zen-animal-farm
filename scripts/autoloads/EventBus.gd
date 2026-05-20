@@ -53,3 +53,9 @@ signal golden_animal_spawned_on_farm(farm_id: String)
 signal golden_animal_spawned(animal_node: Node, farm_id: String)
 signal golden_animal_collected(amount_coins: int, amount_shards: int)
 signal golden_animal_expired()
+
+# Coin / Spirit shower
+signal coin_shower_available()
+signal spirit_shower_available()
+signal coin_shower_gone()
+signal spirit_shower_gone()

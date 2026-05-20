@@ -33,6 +33,7 @@ func save_game() -> void:
 
 	QuestManager.save_state(cfg)
 	FarmManager.save_state(cfg)
+	CoinShowerManager.save_state(cfg)
 
 	cfg.save(SAVE_PATH)
 
@@ -74,6 +75,7 @@ func load_game() -> bool:
 
 	QuestManager.load_state(cfg)
 	FarmManager.load_state(cfg)
+	CoinShowerManager.load_state(cfg)
 	AnimalProductionManager.load_all_farms(placed_animals_per_farm)
 	return true
 

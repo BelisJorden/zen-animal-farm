@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Zen Farm — Accessory Voxel Reference v2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0c0c0e;
+    --bg-2: #131316;
+    --card: #18181c;
+    --card-2: #1d1d22;
+    --border: #26262c;
+    --border-2: #34343c;
+    --text: #ececee;
+    --text-dim: #8b8b94;
+    --text-low: #56565e;
+    --accent: #d8f0c2;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    min-height: 100vh;
+    padding: 56px 64px 96px;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+  .mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+  .doc-header {
+    max-width: 1280px;
+    margin: 0 auto 56px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: end;
+    gap: 24px;
+    padding-bottom: 28px;
+    border-bottom: 1px solid var(--border);
+  }
+  .eyebrow {
+    margin: 0 0 12px;
+    color: var(--accent);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+  h1 {
+    margin: 0;
+    font-size: 56px;
+    line-height: 1;
+    font-weight: 600;
+    letter-spacing: -0.025em;
+  }
+  h1 em { color: var(--text-dim); font-style: normal; font-weight: 400; }
+  .doc-header p { max-width: 720px; margin: 12px 0 0; color: var(--text-dim); font-size: 16px; }
+  .doc-meta { text-align: right; color: var(--text-dim); font-size: 12px; letter-spacing: 0.04em; }
+  .doc-meta div + div { margin-top: 4px; }
+  .doc-meta b { color: var(--text); font-weight: 500; }
+  section { max-width: 1280px; margin: 0 auto 72px; }
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    margin-bottom: 24px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .section-num {
+    color: var(--accent);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+  }
+  h2 { margin: 0; font-size: 32px; line-height: 1; font-weight: 600; letter-spacing: -0.015em; }
+  h2 .sub { margin-left: 12px; color: var(--text-dim); font-size: 18px; font-weight: 400; }
+  h3 {
+    margin: 0 0 12px;
+    color: var(--text-dim);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .palette {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 14px;
+  }
+  .swatch {
+    overflow: hidden;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+  }
+  .swatch-color { height: 96px; position: relative; }
+  .swatch-color::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.08), transparent 54%);
+  }
+  .swatch-body { padding: 13px 14px 15px; border-top: 1px solid var(--border); }
+  .swatch-hex { margin-bottom: 4px; color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 500; }
+  .swatch-role { margin-bottom: 2px; color: var(--text); font-size: 12px; font-weight: 500; }
+  .swatch-use { color: var(--text-low); font-size: 11px; line-height: 1.35; }
+  .convention, .mount-card {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    padding: 24px 28px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+  }
+  .conv-item { display: flex; gap: 14px; align-items: flex-start; }
+  .conv-axis {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    display: grid;
+    place-items: center;
+    border-radius: 6px;
+    color: #fff;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+    font-size: 14px;
+  }
+  .conv-axis.x { background: #cc3333; }
+  .conv-axis.y { background: #4a9d4f; }
+  .conv-axis.z { background: #3a78c2; }
+  .conv-item b { font-weight: 600; }
+  .conv-item p { margin: 2px 0 0; color: var(--text-dim); font-size: 12px; line-height: 1.5; }
+  .accessory-hero {
+    display: grid;
+    grid-template-columns: 1.35fr 1fr;
+    gap: 32px;
+    margin-bottom: 40px;
+  }
+  .iso-card {
+    height: 420px;
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(180deg, #1a1a1f 0%, #131316 100%);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+  }
+  .iso-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
+    background-size: 32px 32px;
+    pointer-events: none;
+  }
+  .iso-label, .iso-rotate-hint {
+    position: absolute;
+    z-index: 3;
+    color: var(--text-low);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .iso-label { top: 18px; left: 18px; }
+  .iso-rotate-hint { right: 18px; bottom: 16px; }
+  .iso-stage {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    perspective: 900px;
+  }
+  .iso-rotator {
+    position: relative;
+    width: 1px;
+    height: 1px;
+    transform-style: preserve-3d;
+    transform: rotateX(32deg) rotateY(-28deg);
+  }
+  .voxel {
+    position: absolute;
+    width: var(--vs);
+    height: var(--vs);
+    transform-style: preserve-3d;
+    transform:
+      translate3d(
+        calc((var(--x) - var(--cx)) * var(--vs)),
+        calc((var(--cy) - var(--y)) * var(--vs)),
+        calc((var(--z) - var(--cz)) * var(--vs))
+      );
+  }
+  .face {
+    position: absolute;
+    width: var(--vs);
+    height: var(--vs);
+    background: var(--col);
+    border: 1px solid rgba(0,0,0,0.22);
+  }
+  .face.front { transform: translateZ(calc(var(--vs) / 2)); filter: brightness(0.96); }
+  .face.back { transform: rotateY(180deg) translateZ(calc(var(--vs) / 2)); filter: brightness(0.72); }
+  .face.right { transform: rotateY(90deg) translateZ(calc(var(--vs) / 2)); filter: brightness(0.82); }
+  .face.left { transform: rotateY(-90deg) translateZ(calc(var(--vs) / 2)); filter: brightness(0.74); }
+  .face.top { transform: rotateX(90deg) translateZ(calc(var(--vs) / 2)); filter: brightness(1.13); }
+  .face.bottom { transform: rotateX(-90deg) translateZ(calc(var(--vs) / 2)); filter: brightness(0.55); }
+  .stats {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 4px 0;
+  }
+  .accessory-name { font-size: 40px; line-height: 1; font-weight: 600; letter-spacing: -0.02em; }
+  .accessory-tagline { color: var(--text-dim); font-size: 15px; line-height: 1.55; }
+  .stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .stat {
+    padding: 14px 16px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+  }
+  .stat-label {
+    margin-bottom: 6px;
+    color: var(--text-low);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .stat-value { color: var(--text); font-size: 22px; font-weight: 600; line-height: 1; }
+  .stat-value small { color: var(--text-dim); font-size: 11px; font-weight: 400; }
+  .colors-used {
+    padding: 16px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+  }
+  .colors-used-label {
+    margin-bottom: 10px;
+    color: var(--text-low);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .color-used-row {
+    display: grid;
+    grid-template-columns: 16px 1fr auto;
+    gap: 10px;
+    align-items: center;
+    padding: 6px 0;
+    border-top: 1px solid var(--border);
+    color: var(--text-dim);
+    font-size: 12px;
+  }
+  .color-used-row:first-child { border-top: 0; }
+  .dot { width: 12px; height: 12px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.18); }
+  .role { color: var(--text); }
+  .hex { font-family: 'JetBrains Mono', monospace; color: var(--text-low); }
+  .ortho-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-bottom: 28px; }
+  .ortho-card {
+    padding: 16px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+  }
+  .ortho-head { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+  .ortho-title { font-size: 13px; font-weight: 600; }
+  .ortho-dir { color: var(--text-low); font-size: 10px; text-align: right; }
+  .grid-wrap {
+    position: relative;
+    min-height: 148px;
+    display: grid;
+    place-items: center;
+    padding: 16px 12px 22px 22px;
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+  .vgrid, .layer-grid { display: grid; gap: 2px; }
+  .cell, .layer-cell {
+    width: 16px;
+    height: 16px;
+    background: #101014;
+    border: 1px solid rgba(255,255,255,0.04);
+  }
+  .cell.filled, .layer-cell.filled {
+    background: var(--col);
+    border-color: rgba(255,255,255,0.18);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.18);
+  }
+  .axis-y, .axis-x {
+    position: absolute;
+    color: var(--text-low);
+    font-size: 9px;
+    letter-spacing: 0.06em;
+  }
+  .axis-y { left: 8px; top: 50%; transform: translateY(-50%) rotate(-90deg); }
+  .axis-x { bottom: 6px; left: 50%; transform: translateX(-50%); }
+  .layers-section {
+    padding: 20px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+  }
+  .layers-head { display: flex; justify-content: space-between; gap: 16px; margin-bottom: 6px; }
+  .layers-title { font-size: 15px; font-weight: 600; }
+  .layers-sub { max-width: 780px; margin: 0 0 18px; color: var(--text-dim); font-size: 12px; }
+  .layers-grid-wrap { display: grid; gap: 12px; }
+  .layer {
+    padding: 12px;
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+  .layer-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; color: var(--text-dim); font-size: 10px; }
+  .layer-head b { color: var(--accent); font-weight: 500; }
+  .layer-caption { margin-top: 8px; min-height: 30px; color: var(--text-low); font-size: 11px; line-height: 1.35; }
+  .tips {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  .tip {
+    padding: 20px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+  }
+  .tip-num { margin-bottom: 8px; color: var(--accent); font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.08em; }
+  .tip h4 { margin: 0 0 8px; font-size: 16px; }
+  .tip p { margin: 0; color: var(--text-dim); font-size: 12px; line-height: 1.55; }
+  code {
+    padding: 1px 6px;
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+  }
+  @media (max-width: 980px) {
+    body { padding: 36px 20px 64px; }
+    .doc-header, .accessory-hero { grid-template-columns: 1fr; }
+    .doc-meta { text-align: left; }
+    h1 { font-size: 40px; }
+    .palette { grid-template-columns: repeat(2, 1fr); }
+    .convention, .mount-card, .ortho-row, .tips { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<header class="doc-header">
+  <div>
+    <p class="eyebrow">Zen Farm · Accessory Voxel Reference</p>
+    <h1>Crown · Wizard Hat · Lotus Halo · Crystal Sprout · Moon Charm · Cherry Blossom · Lantern · Rainbow Arc · Spirit Fox Mask · Tiny Campfire <em>— v2</em></h1>
+    <p>Small voxel accessories designed to sit above Zen Farm animals. The silhouettes stay cute, readable, and compact, with simple bottom contact points so they can be attached to a head socket or floated just above it.</p>
+  </div>
+  <div class="doc-meta mono">
+    <div>Style ref · <b>Crossy Road / Mystic Farm</b></div>
+    <div>Tool · <b>MagicaVoxel 0.99</b></div>
+    <div>Accessories · <b>10 / 10 ready</b></div>
+  </div>
+</header>
+
+<section>
+  <div class="section-head">
+    <span class="section-num">01</span>
+    <h2>Palette<span class="sub">new mystic colours for accessories</span></h2>
+  </div>
+  <div class="palette" id="palette"></div>
+</section>
+
+<section>
+  <div class="section-head">
+    <span class="section-num">02</span>
+    <h2>Coordinate convention<span class="sub">same grid logic as the animal reference</span></h2>
+  </div>
+  <div class="convention">
+    <div class="conv-item">
+      <div class="conv-axis x">X</div>
+      <div><b>Width — left ↔ right</b><p>Side-to-side axis. Keep accessories centered so X midpoint can align to the animal head socket.</p></div>
+    </div>
+    <div class="conv-item">
+      <div class="conv-axis y">Y</div>
+      <div><b>Height — bottom ↑ top</b><p>Layer 0 is the contact or floating base. Build upward in MagicaVoxel.</p></div>
+    </div>
+    <div class="conv-item">
+      <div class="conv-axis z">Z</div>
+      <div><b>Depth — back ↔ front</b><p>0 is the back. Max Z is the front, matching the animal face direction.</p></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="section-head">
+    <span class="section-num">03</span>
+    <h2>Attachment rules<span class="sub">make them easy to place above any animal</span></h2>
+  </div>
+  <div class="mount-card">
+    <div class="conv-item">
+      <div class="conv-axis y">1</div>
+      <div><b>Center the footprint</b><p>Keep the bottom layer symmetrical around the model center. For even widths, align the two center voxels over the head.</p></div>
+    </div>
+    <div class="conv-item">
+      <div class="conv-axis z">2</div>
+      <div><b>Preserve face direction</b><p>Put jewels, stars, openings, or crescent details on max Z so the front view reads clearly.</p></div>
+    </div>
+    <div class="conv-item">
+      <div class="conv-axis x">3</div>
+      <div><b>Leave a tiny air gap</b><p>In-game, place most accessories 0.5-1 voxel above the head unless they are meant to wrap around it.</p></div>
+    </div>
+  </div>
+</section>
+
+<main id="accessories"></main>
+
+<section>
+  <div class="section-head">
+    <span class="section-num">14</span>
+    <h2>MagicaVoxel tips<span class="sub">small props, clean exports</span></h2>
+  </div>
+  <div class="tips">
+    <div class="tip">
+      <div class="tip-num">01 · CANVAS</div>
+      <h4>Use a tight box</h4>
+      <p>Crown: <code>8 × 8 × 6</code>. Wizard Hat: <code>7 × 7 × 8</code>. Lotus Halo: <code>7 × 7 × 5</code>. Crystal Sprout: <code>6 × 6 × 7</code>. Moon Charm: <code>7 × 5 × 7</code>. Cherry Blossom: <code>7 × 7 × 5</code>. Lantern: <code>5 × 5 × 7</code>. Rainbow Arc: <code>9 × 5 × 3</code>. Fox Mask: <code>7 × 7 × 3</code>. Campfire: <code>5 × 5 × 5</code>.</p>
+    </div>
+    <div class="tip">
+      <div class="tip-num">02 · SOCKET</div>
+      <h4>Export from centered origin</h4>
+      <p>Keep the accessory centered in the canvas, then use one shared attach offset in the game for each animal size class.</p>
+    </div>
+    <div class="tip">
+      <div class="tip-num">03 · READABILITY</div>
+      <h4>One strong icon per prop</h4>
+      <p>Each accessory should have one obvious shape: crown points, cone hat, halo ring, crystal cluster, or crescent. Tiny decorations are secondary.</p>
+    </div>
+  </div>
+</section>
+
+<script>
+const C = {
+  crownGold: '#F3B43A',
+  jewelRed: '#D94A4A',
+  wizardPurple: '#7B4CE2',
+  deepPurple: '#3B246B',
+  moonSilver: '#D8E2F0',
+  lotusPink: '#F2A7C6',
+  spiritTeal: '#56D6C9',
+  crystalBlue: '#69B7FF',
+  leafGreen: '#76B852',
+  shadow: '#1A1A1A',
+  cream: '#F6E7B1',
+  // New v2 colours
+  blossomPink: '#F5B8D0',
+  blossomDeep: '#E87FA8',
+  blossomCenter: '#FFE066',
+  lanternRed: '#E8402A',
+  lanternGold: '#F0C040',
+  lanternPaper: '#FFF0C0',
+  rainbowRed: '#FF4444',
+  rainbowOrange: '#FF9933',
+  rainbowYellow: '#FFE033',
+  rainbowGreen: '#66CC44',
+  rainbowBlue: '#4499FF',
+  rainbowViolet: '#9944EE',
+  foxOrange: '#E8762A',
+  foxCream: '#F5E8C0',
+  foxRed: '#CC2222',
+  campfireOrange: '#FF7722',
+  campfireYellow: '#FFD033',
+  campfireRed: '#CC3311',
+  logBrown: '#7A4A1A',
+  logDark: '#4A2A0A',
+};
+
+const PALETTE = [
+  ['#F3B43A', 'Crown Gold', 'crown base, halo accents'],
+  ['#D94A4A', 'Jewel Red', 'crown jewels, magical accent'],
+  ['#7B4CE2', 'Wizard Purple', 'wizard hat cone'],
+  ['#3B246B', 'Deep Purple', 'hat brim and shadow'],
+  ['#D8E2F0', 'Moon Silver', 'moon charm and soft highlights'],
+  ['#F2A7C6', 'Lotus Pink', 'lotus petals'],
+  ['#56D6C9', 'Spirit Teal', 'lotus core and magic glow'],
+  ['#69B7FF', 'Crystal Blue', 'crystal cluster'],
+  ['#F5B8D0', 'Blossom Pink', 'cherry blossom petals'],
+  ['#E8402A', 'Lantern Red', 'lantern body'],
+  ['#F0C040', 'Lantern Gold', 'lantern trim and glow'],
+  ['#E8762A', 'Fox Orange', 'fox mask base'],
+  ['#FF7722', 'Campfire Orange', 'flame body'],
+  ['#7A4A1A', 'Log Brown', 'campfire logs'],
+  ['#4499FF', 'Rainbow Blue', 'rainbow arc'],
+  ['#66CC44', 'Rainbow Green', 'rainbow arc'],
+];
+
+function set(out, x, y, z, c) { out.push({ x, y, z, c }); }
+function block(out, x0, x1, y0, y1, z0, z1, c) {
+  for (let x = x0; x <= x1; x++)
+    for (let y = y0; y <= y1; y++)
+      for (let z = z0; z <= z1; z++)
+        set(out, x, y, z, c);
+}
+function removeAt(out, x, y, z) {
+  for (let i = out.length - 1; i >= 0; i--) {
+    if (out[i].x === x && out[i].y === y && out[i].z === z) out.splice(i, 1);
+  }
+}
+function replaceAt(out, x, y, z, c) {
+  removeAt(out, x, y, z);
+  set(out, x, y, z, c);
+}
+
+function makeCrown() {
+  const v = [];
+  for (let y = 0; y <= 1; y++) {
+    for (let x = 0; x <= 7; x++) {
+      set(v, x, y, 2, C.crownGold);
+      set(v, x, y, 5, C.crownGold);
+    }
+    for (let z = 3; z <= 4; z++) {
+      set(v, 0, y, z, C.crownGold);
+      set(v, 7, y, z, C.crownGold);
+    }
+  }
+  for (let x = 1; x <= 6; x += 2) replaceAt(v, x, 1, 5, C.jewelRed);
+  block(v, 0, 0, 2, 4, 2, 5, C.crownGold);
+  block(v, 7, 7, 2, 4, 2, 5, C.crownGold);
+  block(v, 2, 2, 2, 5, 2, 5, C.crownGold);
+  block(v, 5, 5, 2, 5, 2, 5, C.crownGold);
+  set(v, 0, 5, 3, C.jewelRed);
+  set(v, 2, 5, 4, C.jewelRed);
+  set(v, 5, 5, 4, C.jewelRed);
+  set(v, 7, 5, 3, C.jewelRed);
+  return v;
+}
+
+function makeWizardHat() {
+  const v = [];
+  for (let x = 0; x <= 6; x++) {
+    for (let z = 0; z <= 6; z++) {
+      const dx = Math.abs(x - 3);
+      const dz = Math.abs(z - 3);
+      if (dx + dz <= 4) set(v, x, 0, z, C.deepPurple);
+    }
+  }
+  block(v, 1, 5, 1, 1, 1, 5, C.wizardPurple);
+  block(v, 1, 5, 2, 2, 1, 5, C.wizardPurple);
+  block(v, 2, 4, 3, 3, 2, 5, C.wizardPurple);
+  block(v, 2, 4, 4, 4, 2, 4, C.wizardPurple);
+  block(v, 3, 4, 5, 5, 3, 4, C.wizardPurple);
+  set(v, 3, 6, 3, C.wizardPurple);
+  set(v, 3, 7, 3, C.cream);
+  set(v, 3, 2, 6, C.cream);
+  set(v, 2, 2, 6, C.cream);
+  set(v, 4, 2, 6, C.cream);
+  set(v, 3, 1, 6, C.cream);
+  set(v, 3, 3, 6, C.cream);
+  return v;
+}
+
+function makeLotusHalo() {
+  const v = [];
+  block(v, 2, 4, 0, 0, 2, 4, C.crownGold);
+  set(v, 3, 1, 3, C.spiritTeal);
+  const petals = [
+    [3, 1, 1], [3, 1, 5], [1, 1, 3], [5, 1, 3],
+    [2, 2, 2], [4, 2, 2], [2, 2, 4], [4, 2, 4],
+    [3, 2, 1], [3, 2, 5], [1, 2, 3], [5, 2, 3],
+  ];
+  petals.forEach(([x, y, z]) => set(v, x, y, z, C.lotusPink));
+  for (let x = 1; x <= 5; x++) {
+    set(v, x, 3, 1, C.crownGold);
+    set(v, x, 3, 5, C.crownGold);
+  }
+  for (let z = 2; z <= 4; z++) {
+    set(v, 1, 3, z, C.crownGold);
+    set(v, 5, 3, z, C.crownGold);
+  }
+  set(v, 3, 4, 1, C.spiritTeal);
+  set(v, 3, 4, 5, C.spiritTeal);
+  return v;
+}
+
+function makeCrystalSprout() {
+  const v = [];
+  block(v, 1, 4, 0, 0, 2, 3, C.leafGreen);
+  set(v, 0, 0, 2, C.leafGreen);
+  set(v, 5, 0, 3, C.leafGreen);
+  block(v, 1, 2, 1, 3, 2, 3, C.crystalBlue);
+  block(v, 3, 4, 1, 4, 2, 3, C.spiritTeal);
+  block(v, 2, 3, 1, 5, 1, 2, C.crystalBlue);
+  set(v, 1, 4, 2, C.moonSilver);
+  set(v, 2, 4, 3, C.moonSilver);
+  set(v, 3, 5, 2, C.moonSilver);
+  set(v, 2, 6, 1, C.moonSilver);
+  set(v, 4, 5, 3, C.moonSilver);
+  return v;
+}
+
+function makeMoonCharm() {
+  const v = [];
+  block(v, 2, 4, 0, 0, 2, 3, C.deepPurple);
+  const moon = [
+    [2,1,3], [3,1,3], [4,1,3],
+    [1,2,3], [2,2,3], [3,2,3],
+    [1,3,3], [2,3,3],
+    [1,4,3], [2,4,3], [3,4,3],
+    [2,5,3], [3,5,3], [4,5,3],
+  ];
+  moon.forEach(([x, y, z]) => {
+    set(v, x, y, z, C.moonSilver);
+    set(v, x, y, z + 1, C.moonSilver);
+  });
+  set(v, 5, 2, 4, C.crownGold);
+  set(v, 5, 4, 4, C.crownGold);
+  set(v, 4, 3, 4, C.crownGold);
+  set(v, 3, 6, 3, C.cream);
+  set(v, 3, 6, 4, C.cream);
+  return v;
+}
+
+function makeCherryBlossom() {
+  const v = [];
+  // Base mount (small gold stem)
+  block(v, 3, 3, 0, 0, 3, 3, C.crownGold);
+  // Stem
+  set(v, 3, 1, 3, C.leafGreen);
+  set(v, 3, 2, 3, C.leafGreen);
+  // Leaves
+  set(v, 2, 1, 3, C.leafGreen);
+  set(v, 4, 1, 3, C.leafGreen);
+  set(v, 2, 2, 2, C.leafGreen);
+  set(v, 4, 2, 4, C.leafGreen);
+  // Five petals around center
+  const petalPositions = [
+    [3,3,1],[3,3,5],[1,3,3],[5,3,3],[3,3,3]
+  ];
+  petalPositions.forEach(([x,y,z]) => set(v, x, y, z, C.blossomPink));
+  // Deeper pink outer petals
+  set(v, 2, 3, 2, C.blossomDeep);
+  set(v, 4, 3, 2, C.blossomDeep);
+  set(v, 2, 3, 4, C.blossomDeep);
+  set(v, 4, 3, 4, C.blossomDeep);
+  // Yellow center
+  set(v, 3, 4, 3, C.blossomCenter);
+  set(v, 3, 3, 3, C.blossomCenter);
+  return v;
+}
+
+function makeLantern() {
+  const v = [];
+  // Top hook
+  set(v, 2, 6, 2, C.lanternGold);
+  // Top cap
+  block(v, 1, 3, 5, 5, 1, 3, C.lanternGold);
+  // Body upper
+  block(v, 1, 3, 4, 4, 1, 3, C.lanternRed);
+  // Body middle with glow window
+  for (let x = 0; x <= 4; x++)
+    for (let z = 0; z <= 4; z++) {
+      const edge = x===0||x===4||z===0||z===4;
+      set(v, x, 3, z, edge ? C.lanternRed : C.lanternPaper);
+    }
+  // Body lower
+  block(v, 1, 3, 2, 2, 1, 3, C.lanternRed);
+  // Gold trim rings
+  for (let x = 0; x <= 4; x++) {
+    set(v, x, 1, 0, C.lanternGold);
+    set(v, x, 1, 4, C.lanternGold);
+  }
+  for (let z = 1; z <= 3; z++) {
+    set(v, 0, 1, z, C.lanternGold);
+    set(v, 4, 1, z, C.lanternGold);
+  }
+  // Bottom tassel
+  set(v, 2, 0, 2, C.lanternGold);
+  set(v, 2, 1, 2, C.lanternGold);
+  return v;
+}
+
+function makeRainbowArc() {
+  const v = [];
+  // Base mounts
+  set(v, 0, 0, 1, C.deepPurple);
+  set(v, 8, 0, 1, C.deepPurple);
+  // Rainbow arc - 6 colour bands, each 1 voxel deep (z=1, z=2)
+  const bands = [C.rainbowRed, C.rainbowOrange, C.rainbowYellow, C.rainbowGreen, C.rainbowBlue, C.rainbowViolet];
+  const arcY = [3,4,4,4,4,3, 2,3,3,3,3,2, 1,2,2,2,2,1, 0,1,1,1,1,0];
+  // Simplified arc shape across x=0..8
+  const arcHeights = [0,1,2,3,3,3,3,2,1,0]; // y offsets per x
+  for (let x = 0; x <= 8; x++) {
+    const baseY = arcHeights[x];
+    bands.forEach((col, i) => {
+      const y = baseY + i;
+      set(v, x, y, 1, col);
+      set(v, x, y, 2, col);
+    });
+  }
+  return v;
+}
+
+function makeFoxMask() {
+  const v = [];
+  // Main face - diamond shape
+  block(v, 1, 5, 0, 0, 2, 4, C.foxOrange);
+  set(v, 0, 0, 3, C.foxOrange);
+  set(v, 6, 0, 3, C.foxOrange);
+  // Face details
+  block(v, 1, 5, 1, 2, 2, 4, C.foxOrange);
+  block(v, 2, 4, 3, 4, 2, 4, C.foxOrange);
+  set(v, 3, 5, 3, C.foxOrange);
+  // Cream muzzle
+  block(v, 2, 4, 1, 2, 3, 4, C.foxCream);
+  // Eyes - dark triangles
+  set(v, 1, 3, 2, C.shadow);
+  set(v, 5, 3, 2, C.shadow);
+  set(v, 2, 4, 2, C.shadow);
+  set(v, 4, 4, 2, C.shadow);
+  // Red markings
+  set(v, 1, 2, 3, C.foxRed);
+  set(v, 5, 2, 3, C.foxRed);
+  set(v, 0, 1, 3, C.foxRed);
+  set(v, 6, 1, 3, C.foxRed);
+  // Nose
+  set(v, 3, 1, 4, C.shadow);
+  // Ears
+  set(v, 1, 5, 3, C.foxOrange);
+  set(v, 5, 5, 3, C.foxOrange);
+  set(v, 0, 6, 3, C.foxOrange);
+  set(v, 6, 6, 3, C.foxOrange);
+  set(v, 1, 6, 3, C.foxCream);
+  set(v, 5, 6, 3, C.foxCream);
+  return v;
+}
+
+function makeCampfire() {
+  const v = [];
+  // Logs cross pattern
+  block(v, 0, 4, 0, 0, 2, 2, C.logBrown);
+  block(v, 2, 2, 0, 0, 0, 4, C.logBrown);
+  set(v, 0, 0, 2, C.logDark);
+  set(v, 4, 0, 2, C.logDark);
+  set(v, 2, 0, 0, C.logDark);
+  set(v, 2, 0, 4, C.logDark);
+  // Ember base
+  block(v, 1, 3, 1, 1, 1, 3, C.campfireRed);
+  // Flame lower
+  set(v, 1, 2, 2, C.campfireOrange);
+  set(v, 2, 2, 1, C.campfireOrange);
+  set(v, 2, 2, 2, C.campfireOrange);
+  set(v, 2, 2, 3, C.campfireOrange);
+  set(v, 3, 2, 2, C.campfireOrange);
+  // Flame middle
+  set(v, 1, 3, 2, C.campfireYellow);
+  set(v, 2, 3, 1, C.campfireOrange);
+  set(v, 2, 3, 2, C.campfireYellow);
+  set(v, 2, 3, 3, C.campfireOrange);
+  set(v, 3, 3, 2, C.campfireYellow);
+  // Flame tip
+  set(v, 2, 4, 2, C.campfireYellow);
+  set(v, 2, 4, 2, C.cream);
+  return v;
+}
+
+const ACCESSORIES = [
+  {
+    name: 'Crown',
+    id: 'crown',
+    sub: 'royal points · red jewels · existing scale reference',
+    tagline: 'A compact royal crown inspired by the existing Crown.vox file. Wide enough to read on big animals, but still centered for head placement.',
+    dims: { x: 8, y: 6, z: 8 },
+    voxels: makeCrown(),
+    scale: 18,
+    time: '~12 min',
+    source: 'Crown.vox reference: 8×8×6 canvas, 116 voxels',
+    layers: ['Lower crown ring', 'Upper band + red front jewels', 'Side towers start', 'Four crown points', 'Tall crown points', 'Red jewel caps'],
+  },
+  {
+    name: 'Wizard Hat',
+    id: 'wizard-hat',
+    sub: 'purple cone · wide brim · tiny star',
+    tagline: 'A soft purple cone hat with a chunky brim and a cream star on the front. The silhouette stays playful, not sharp.',
+    dims: { x: 7, y: 8, z: 7 },
+    voxels: makeWizardHat(),
+    scale: 19,
+    time: '~14 min',
+    source: 'New design',
+    layers: ['Wide diamond brim', 'Cone base', 'Cone + front star', 'Narrowing cone', 'Upper cone', 'Bent tip start', 'Purple tip', 'Cream sparkle tip'],
+  },
+  {
+    name: 'Lotus Halo',
+    id: 'lotus-halo',
+    sub: 'floating ring · lotus petals · teal center',
+    tagline: 'A calm zen accessory: small lotus petals underneath a golden floating halo, with teal spirit voxels to sell the mystic theme.',
+    dims: { x: 7, y: 5, z: 7 },
+    voxels: makeLotusHalo(),
+    scale: 21,
+    time: '~10 min',
+    source: 'New design',
+    layers: ['Centered gold mount', 'Teal core + four petals', 'Outer lotus petals', 'Gold halo ring', 'Two teal glow points'],
+  },
+  {
+    name: 'Crystal Sprout',
+    id: 'crystal-sprout',
+    sub: 'leaf base · blue crystals · teal shard',
+    tagline: 'A little cluster of magical crystals growing from a green sprout base. Good for rare animals, mystic crops, or night variants.',
+    dims: { x: 6, y: 7, z: 6 },
+    voxels: makeCrystalSprout(),
+    scale: 21,
+    time: '~11 min',
+    source: 'New design',
+    layers: ['Leafy base', 'Crystal roots', 'Crystal bodies', 'Blue shard body', 'Teal shard + highlights', 'Tall highlight', 'Top sparkle'],
+  },
+  {
+    name: 'Moon Charm',
+    id: 'moon-charm',
+    sub: 'silver crescent · tiny golden stars',
+    tagline: 'A vertical crescent charm that floats above the head. It reads clearly from front view and keeps a narrow footprint.',
+    dims: { x: 7, y: 7, z: 5 },
+    voxels: makeMoonCharm(),
+    scale: 21,
+    time: '~12 min',
+    source: 'New design',
+    layers: ['Small purple mount', 'Crescent lower arc', 'Crescent + star', 'Crescent middle', 'Crescent + star', 'Crescent upper arc', 'Cream top glint'],
+  },
+  {
+    name: 'Cherry Blossom',
+    id: 'cherry-blossom',
+    sub: 'pink petals · gold center · green stem',
+    tagline: 'A delicate cherry blossom floating above the animal. Fits the zen garden theme perfectly — soft pinks with a warm gold center and a tiny green stem.',
+    dims: { x: 7, y: 5, z: 7 },
+    voxels: makeCherryBlossom(),
+    scale: 21,
+    time: '~10 min',
+    source: 'New design — v2',
+    layers: ['Gold base mount', 'Green stem + leaves', 'Upper leaves', 'Five pink petals + deep pink accent', 'Gold center'],
+  },
+  {
+    name: 'Lantern',
+    id: 'lantern',
+    sub: 'red paper body · gold trim · glowing window',
+    tagline: 'A classic Japanese paper lantern floating above the animal. The cream interior gives a warm glow. Cozy and instantly recognisable — perfect for the zen farm theme.',
+    dims: { x: 5, y: 7, z: 5 },
+    voxels: makeLantern(),
+    scale: 22,
+    time: '~13 min',
+    source: 'New design — v2',
+    layers: ['Gold tassel tip', 'Gold trim ring', 'Lower red body', 'Glowing paper window', 'Upper red body', 'Gold top cap', 'Hook'],
+  },
+  {
+    name: 'Rainbow Arc',
+    id: 'rainbow-arc',
+    sub: '6-colour arch · wide silhouette · cheerful',
+    tagline: 'A miniature rainbow arching above the animal head. Six colour bands read instantly even at small scale. Great as a rare quest reward accessory.',
+    dims: { x: 9, y: 9, z: 3 },
+    voxels: makeRainbowArc(),
+    scale: 15,
+    time: '~15 min',
+    source: 'New design — v2',
+    layers: ['Base mounts', 'Red outer band', 'Orange band', 'Yellow band', 'Green band', 'Blue band', 'Violet inner band', '', ''],
+  },
+  {
+    name: 'Spirit Fox Mask',
+    id: 'fox-mask',
+    sub: 'orange face · red markings · pointed ears',
+    tagline: 'A kitsune / fox spirit mask floating above the head. Iconic Japanese design with orange base, red markings and cream muzzle. Perfect for mystic-rarity animals.',
+    dims: { x: 7, y: 7, z: 5 },
+    voxels: makeFoxMask(),
+    scale: 20,
+    time: '~16 min',
+    source: 'New design — v2',
+    layers: ['Wide face base', 'Face + cream muzzle', 'Eyes + red markings', 'Nose + upper face', 'Upper face detail', 'Ear bases', 'Pointed ear tips'],
+  },
+  {
+    name: 'Tiny Campfire',
+    id: 'campfire',
+    sub: 'crossed logs · orange flame · cream tip',
+    tagline: 'A cozy little campfire sitting above the animal. Crossed brown logs with a layered orange-yellow flame. Warm and inviting — fits the farm theme perfectly.',
+    dims: { x: 5, y: 5, z: 5 },
+    voxels: makeCampfire(),
+    scale: 22,
+    time: '~11 min',
+    source: 'New design — v2',
+    layers: ['Crossed logs base', 'Red ember layer', 'Orange flame lower', 'Yellow flame middle', 'Cream flame tip'],
+  },
+];
+
+function colourRows(model) {
+  const used = [...new Set(model.voxels.map(v => v.c))];
+  return used.map(hex => {
+    const info = PALETTE.find(p => p[0] === hex) || [hex, hex, 'detail colour'];
+    return `<div class="color-used-row"><span class="dot" style="background:${hex}"></span><span class="role">${info[1]}</span><span class="hex">${hex}</span></div>`;
+  }).join('');
+}
+
+function renderPalette() {
+  document.getElementById('palette').innerHTML = PALETTE.map(([hex, role, use]) => `
+    <div class="swatch">
+      <div class="swatch-color" style="background:${hex}"></div>
+      <div class="swatch-body">
+        <div class="swatch-hex">${hex}</div>
+        <div class="swatch-role">${role}</div>
+        <div class="swatch-use">${use}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function accessorySection(model, index) {
+  const wdh = `${model.dims.x}×${model.dims.z}×${model.dims.y}`;
+  return `
+    <section>
+      <div class="section-head">
+        <span class="section-num">${String(index + 4).padStart(2, '0')}</span>
+        <h2>${model.name}<span class="sub">${model.sub}</span></h2>
+      </div>
+      <div class="accessory-hero">
+        <div class="iso-card">
+          <span class="iso-label mono">Isometric · 32° / -28°</span>
+          <span class="iso-rotate-hint mono">drag to rotate</span>
+          <div class="iso-stage" id="iso-${model.id}"></div>
+        </div>
+        <div class="stats">
+          <div class="accessory-name">${model.name}</div>
+          <div class="accessory-tagline">${model.tagline}</div>
+          <div class="stat-row">
+            <div class="stat"><div class="stat-label">Bounding Box</div><div class="stat-value">${wdh} <small>WDH</small></div></div>
+            <div class="stat"><div class="stat-label">Voxel Count</div><div class="stat-value">${model.voxels.length} <small>filled</small></div></div>
+          </div>
+          <div class="stat-row">
+            <div class="stat"><div class="stat-label">Source</div><div class="stat-value"><small>${model.source}</small></div></div>
+            <div class="stat"><div class="stat-label">Build Time</div><div class="stat-value">${model.time}</div></div>
+          </div>
+          <div class="colors-used">
+            <div class="colors-used-label">Colours used</div>
+            <div class="colors-used-list">${colourRows(model)}</div>
+          </div>
+        </div>
+      </div>
+      <div class="ortho-row" id="ortho-${model.id}"></div>
+      <div class="layers-section">
+        <div class="layers-head">
+          <div class="layers-title">Layer-by-layer · top-down slices</div>
+          <div class="mono" style="font-size:10px; color: var(--text-low); letter-spacing:0.1em;">↑ BUILD ORDER ↑</div>
+        </div>
+        <p class="layers-sub">Each grid is a horizontal slice viewed from above. Build from Y=0 upward; max Z is the front of the accessory.</p>
+        <div class="layers-grid-wrap" id="layers-${model.id}"></div>
+      </div>
+    </section>
+  `;
+}
+
+function renderIsometric(containerId, model, voxelSize) {
+  const stage = document.getElementById(containerId);
+  const rotator = document.createElement('div');
+  rotator.className = 'iso-rotator';
+  rotator.style.setProperty('--vs', voxelSize + 'px');
+  const cx = (model.dims.x - 1) / 2;
+  const cy = (model.dims.y - 1) / 2;
+  const cz = (model.dims.z - 1) / 2;
+  const sorted = [...model.voxels].sort((a, b) => (b.z - a.z) + (a.y - b.y) * 0.01 + (a.x - b.x) * 0.001);
+  sorted.forEach(v => {
+    const el = document.createElement('div');
+    el.className = 'voxel';
+    el.style.setProperty('--vs', voxelSize + 'px');
+    el.style.setProperty('--x', v.x);
+    el.style.setProperty('--y', v.y);
+    el.style.setProperty('--z', v.z);
+    el.style.setProperty('--cx', cx);
+    el.style.setProperty('--cy', cy);
+    el.style.setProperty('--cz', cz);
+    el.style.setProperty('--col', v.c);
+    ['top', 'front', 'right', 'left', 'back', 'bottom'].forEach(face => {
+      const f = document.createElement('div');
+      f.className = 'face ' + face;
+      el.appendChild(f);
+    });
+    rotator.appendChild(el);
+  });
+  stage.appendChild(rotator);
+  let dragging = false, startX = 0, startY = 0, rotY = -28, rotX = 32;
+  const apply = () => rotator.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+  stage.style.cursor = 'grab';
+  stage.addEventListener('pointerdown', e => {
+    dragging = true;
+    startX = e.clientX;
+    startY = e.clientY;
+    stage.style.cursor = 'grabbing';
+    stage.setPointerCapture(e.pointerId);
+  });
+  stage.addEventListener('pointermove', e => {
+    if (!dragging) return;
+    rotY = -28 + (e.clientX - startX) * 0.5;
+    rotX = Math.max(-10, Math.min(70, 32 - (e.clientY - startY) * 0.4));
+    apply();
+  });
+  stage.addEventListener('pointerup', () => {
+    dragging = false;
+    stage.style.cursor = 'grab';
+  });
+}
+
+function hit(model, x, y, z) {
+  return model.voxels.find(v => v.x === x && v.y === y && v.z === z);
+}
+function projectFront(model) {
+  const grid = [];
+  for (let y = model.dims.y - 1; y >= 0; y--) {
+    const row = [];
+    for (let x = 0; x < model.dims.x; x++) {
+      let c = null;
+      for (let z = model.dims.z - 1; z >= 0; z--) {
+        const v = hit(model, x, y, z);
+        if (v) { c = v.c; break; }
+      }
+      row.push(c);
+    }
+    grid.push(row);
+  }
+  return grid;
+}
+function projectSide(model) {
+  const grid = [];
+  for (let y = model.dims.y - 1; y >= 0; y--) {
+    const row = [];
+    for (let z = 0; z < model.dims.z; z++) {
+      let c = null;
+      for (let x = 0; x < model.dims.x; x++) {
+        const v = hit(model, x, y, z);
+        if (v) { c = v.c; break; }
+      }
+      row.push(c);
+    }
+    grid.push(row);
+  }
+  return grid;
+}
+function projectTop(model) {
+  const grid = [];
+  for (let z = 0; z < model.dims.z; z++) {
+    const row = [];
+    for (let x = 0; x < model.dims.x; x++) {
+      let c = null;
+      for (let y = model.dims.y - 1; y >= 0; y--) {
+        const v = hit(model, x, y, z);
+        if (v) { c = v.c; break; }
+      }
+      row.push(c);
+    }
+    grid.push(row);
+  }
+  return grid;
+}
+function projectLayer(model, layerY) {
+  const grid = [];
+  for (let z = 0; z < model.dims.z; z++) {
+    const row = [];
+    for (let x = 0; x < model.dims.x; x++) {
+      const v = hit(model, x, layerY, z);
+      row.push(v ? v.c : null);
+    }
+    grid.push(row);
+  }
+  return grid;
+}
+function renderGrid(grid, className) {
+  const el = document.createElement('div');
+  el.className = className;
+  el.style.gridTemplateColumns = `repeat(${grid[0].length}, auto)`;
+  grid.forEach(row => {
+    row.forEach(c => {
+      const cell = document.createElement('div');
+      cell.className = (className === 'vgrid' ? 'cell' : 'layer-cell') + (c ? ' filled' : ' empty');
+      if (c) cell.style.setProperty('--col', c);
+      el.appendChild(cell);
+    });
+  });
+  return el;
+}
+function renderOrtho(containerId, model) {
+  const container = document.getElementById(containerId);
+  const views = [
+    { title: 'Front', dir: '← X →   ↕ Y', axisX: 'X →', axisY: '↑ Y', proj: projectFront },
+    { title: 'Side', dir: '← Z →   ↕ Y · front right', axisX: 'Z →', axisY: '↑ Y', proj: projectSide },
+    { title: 'Top', dir: '← X →   ↕ Z · front down', axisX: 'X →', axisY: '↓ Z', proj: projectTop },
+  ];
+  views.forEach(view => {
+    const card = document.createElement('div');
+    card.className = 'ortho-card';
+    card.innerHTML = `
+      <div class="ortho-head">
+        <div class="ortho-title">${view.title} view</div>
+        <div class="ortho-dir mono">${view.dir}</div>
+      </div>
+      <div class="grid-wrap">
+        <div class="axis-y mono">${view.axisY}</div>
+        <div class="axis-x mono">${view.axisX}</div>
+      </div>
+    `;
+    const wrap = card.querySelector('.grid-wrap');
+    wrap.insertBefore(renderGrid(view.proj(model), 'vgrid'), card.querySelector('.axis-x'));
+    container.appendChild(card);
+  });
+}
+function renderLayers(containerId, model) {
+  const container = document.getElementById(containerId);
+  container.style.gridTemplateColumns = `repeat(${model.dims.y}, 1fr)`;
+  for (let y = model.dims.y - 1; y >= 0; y--) {
+    const layer = document.createElement('div');
+    layer.className = 'layer';
+    layer.innerHTML = `<div class="layer-head mono"><b>Y=${y}</b><span>${y === 0 ? 'GROUND' : y === model.dims.y - 1 ? 'TOP' : ''}</span></div>`;
+    layer.appendChild(renderGrid(projectLayer(model, y), 'layer-grid'));
+    const cap = document.createElement('div');
+    cap.className = 'layer-caption';
+    cap.textContent = model.layers[y] || '';
+    layer.appendChild(cap);
+    container.appendChild(layer);
+  }
+}
+
+renderPalette();
+document.getElementById('accessories').innerHTML = ACCESSORIES.map(accessorySection).join('');
+ACCESSORIES.forEach(model => {
+  renderIsometric(`iso-${model.id}`, model, model.scale);
+  renderOrtho(`ortho-${model.id}`, model);
+  renderLayers(`layers-${model.id}`, model);
+});
+</script>
+</body>
+</html>
