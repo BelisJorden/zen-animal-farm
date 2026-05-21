@@ -13,3 +13,4 @@ model_scale = 1.2
 price = 500
 rarity = "rare"
 coin_bonus_percent = 1.0
+outline_width = 0.025

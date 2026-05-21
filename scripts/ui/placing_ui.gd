@@ -185,6 +185,15 @@ func _apply_card_style(panel: PanelContainer, selected: bool) -> void:
 	panel.add_theme_stylebox_override("panel", s)
 
 
+func is_detail_open() -> bool:
+	return _detail_panel != null and _detail_panel.visible
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_VISIBILITY_CHANGED and not visible and _detail_panel:
+		_detail_panel.visible = false
+
+
 func _on_inventory_changed() -> void:
 	_build_cards(_active_id)
 

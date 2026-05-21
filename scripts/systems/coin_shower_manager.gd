@@ -1,158 +1,113 @@
 extends Node
 
-const COIN_INTERVAL:    float = 600.0  # 10 min
+const COIN_INTERVAL:    float = 10.0    # seconden (10 voor testen, productie: 1800)
 const SPIRIT_INTERVAL:  float = 1800.0  # 30 min
-const WINDOW_DURATION:  float = 300.0   # 5 min button stays visible
+const WINDOW_DURATION:  float = 300.0   # 5 min knop zichtbaar
 
 var coin_shower_ready:   bool   = false
 var spirit_shower_ready: bool   = false
-var pending_shower_type: String = "coin"  # read by CoinShowerGame in _ready()
+var pending_shower_type: String = "coin"  # gelezen door CoinShowerGame in _ready()
 
-var _coin_timer:          Timer = null
-var _spirit_timer:        Timer = null
-var _coin_window_timer:   Timer = null
-var _spirit_window_timer: Timer = null
+# Unix timestamps (int seconden) — 0 = inactief
+var _coin_next_time:         int = 0
+var _spirit_next_time:       int = 0
+var _coin_window_end_time:   int = 0
+var _spirit_window_end_time: int = 0
 
 
 func _ready() -> void:
-	_coin_timer          = _make_timer(COIN_INTERVAL,   _on_coin_timer_done)
-	_spirit_timer        = _make_timer(SPIRIT_INTERVAL, _on_spirit_timer_done)
-	_coin_window_timer   = _make_timer(WINDOW_DURATION, _on_coin_window_expired,   true)
-	_spirit_window_timer = _make_timer(WINDOW_DURATION, _on_spirit_window_expired, true)
-	_coin_timer.start()
+	var now := int(Time.get_unix_time_from_system())
+	_coin_next_time   = now + int(COIN_INTERVAL)
+	_spirit_next_time = now + int(SPIRIT_INTERVAL)
 	EventBus.quest_completed.connect(
-		func(_id: String, _c: int, _s: int, _i: String): _check_start_spirit_timer()
+		func(_id: String, _c: int, _s: int, _i: String): _on_quest_completed_check()
 	)
 
 
-func _make_timer(wait: float, callback: Callable, one_shot: bool = false) -> Timer:
-	var t := Timer.new()
-	t.wait_time = wait
-	t.one_shot  = one_shot
-	t.timeout.connect(callback)
-	add_child(t)
-	return t
+# _process checkt real-world klok elke frame — werkt ook na pauzeren/achtergrond
+func _process(_delta: float) -> void:
+	var now := int(Time.get_unix_time_from_system())
+
+	# Coin shower: interval verstreken
+	if not coin_shower_ready and _coin_next_time > 0 and now >= _coin_next_time:
+		coin_shower_ready     = true
+		_coin_next_time       = 0
+		_coin_window_end_time = now + int(WINDOW_DURATION)
+		EventBus.coin_shower_available.emit()
+
+	# Coin shower: venster verlopen zonder tap
+	if coin_shower_ready and _coin_window_end_time > 0 and now >= _coin_window_end_time:
+		coin_shower_ready     = false
+		_coin_window_end_time = 0
+		_coin_next_time       = now + int(COIN_INTERVAL)
+		EventBus.coin_shower_gone.emit()
+
+	# Spirit shower: interval verstreken
+	if is_spirit_shower_unlocked() and not spirit_shower_ready \
+			and _spirit_next_time > 0 and now >= _spirit_next_time:
+		spirit_shower_ready     = true
+		_spirit_next_time       = 0
+		_spirit_window_end_time = now + int(WINDOW_DURATION)
+		EventBus.spirit_shower_available.emit()
+
+	# Spirit shower: venster verlopen
+	if spirit_shower_ready and _spirit_window_end_time > 0 and now >= _spirit_window_end_time:
+		spirit_shower_ready     = false
+		_spirit_window_end_time = 0
+		_spirit_next_time       = now + int(SPIRIT_INTERVAL)
+		EventBus.spirit_shower_gone.emit()
 
 
 func is_spirit_shower_unlocked() -> bool:
 	return QuestManager.completed_quests.size() >= 3
 
 
-func _check_start_spirit_timer() -> void:
-	if is_spirit_shower_unlocked() and _spirit_timer.is_stopped() and not spirit_shower_ready:
-		_spirit_timer.wait_time = SPIRIT_INTERVAL
-		_spirit_timer.start()
-
-
-func _on_coin_timer_done() -> void:
-	coin_shower_ready = true
-	EventBus.coin_shower_available.emit()
-	_coin_window_timer.start()
-
-
-func _on_spirit_timer_done() -> void:
-	if not is_spirit_shower_unlocked():
-		_spirit_timer.wait_time = SPIRIT_INTERVAL
-		_spirit_timer.start()
-		return
-	spirit_shower_ready = true
-	EventBus.spirit_shower_available.emit()
-	_spirit_window_timer.start()
-
-
-func _on_coin_window_expired() -> void:
-	coin_shower_ready = false
-	EventBus.coin_shower_gone.emit()
-	_coin_timer.wait_time = COIN_INTERVAL
-	_coin_timer.start()
-
-
-func _on_spirit_window_expired() -> void:
-	spirit_shower_ready = false
-	EventBus.spirit_shower_gone.emit()
-	_spirit_timer.wait_time = SPIRIT_INTERVAL
-	_spirit_timer.start()
+func _on_quest_completed_check() -> void:
+	if is_spirit_shower_unlocked() and _spirit_next_time == 0 and not spirit_shower_ready:
+		_spirit_next_time = int(Time.get_unix_time_from_system()) + int(SPIRIT_INTERVAL)
 
 
 func open_coin_shower() -> void:
-	coin_shower_ready = false
-	_coin_window_timer.stop()
-	pending_shower_type = "coin"
+	coin_shower_ready     = false
+	_coin_window_end_time = 0
+	pending_shower_type   = "coin"
 	EventBus.coin_shower_gone.emit()
 
 
 func open_spirit_shower() -> void:
-	spirit_shower_ready = false
-	_spirit_window_timer.stop()
-	pending_shower_type = "spirit"
+	spirit_shower_ready     = false
+	_spirit_window_end_time = 0
+	pending_shower_type     = "spirit"
 	EventBus.spirit_shower_gone.emit()
 
 
 func on_shower_finished() -> void:
+	var now := int(Time.get_unix_time_from_system())
 	if pending_shower_type == "coin":
-		_coin_timer.wait_time = COIN_INTERVAL
-		_coin_timer.start()
+		_coin_next_time = now + int(COIN_INTERVAL)
 	else:
-		_spirit_timer.wait_time = SPIRIT_INTERVAL
-		_spirit_timer.start()
+		_spirit_next_time = now + int(SPIRIT_INTERVAL)
 
 
 # ── Save / Load ────────────────────────────────────────────────────────────────
 
 func save_state(cfg: ConfigFile) -> void:
-	var now := int(Time.get_unix_time_from_system())
-
-	var coin_next: int
-	if coin_shower_ready:
-		coin_next = 0  # already available
-	elif not _coin_timer.is_stopped():
-		coin_next = now + int(_coin_timer.time_left)
-	else:
-		coin_next = now
-
-	var spirit_next: int
-	if spirit_shower_ready:
-		spirit_next = 0
-	elif not _spirit_timer.is_stopped():
-		spirit_next = now + int(_spirit_timer.time_left)
-	else:
-		spirit_next = now + int(SPIRIT_INTERVAL)
-
-	cfg.set_value("coin_shower", "coin_next_time",   coin_next)
-	cfg.set_value("coin_shower", "spirit_next_time", spirit_next)
-	cfg.set_value("coin_shower", "coin_ready",       coin_shower_ready)
-	cfg.set_value("coin_shower", "spirit_ready",     spirit_shower_ready)
+	cfg.set_value("coin_shower", "coin_next_time",    _coin_next_time)
+	cfg.set_value("coin_shower", "spirit_next_time",  _spirit_next_time)
+	cfg.set_value("coin_shower", "coin_window_end",   _coin_window_end_time)
+	cfg.set_value("coin_shower", "spirit_window_end", _spirit_window_end_time)
+	cfg.set_value("coin_shower", "coin_ready",        coin_shower_ready)
+	cfg.set_value("coin_shower", "spirit_ready",      spirit_shower_ready)
 
 
 func load_state(cfg: ConfigFile) -> void:
 	var now := int(Time.get_unix_time_from_system())
-	var coin_next: int   = cfg.get_value("coin_shower", "coin_next_time",   now + int(COIN_INTERVAL))
-	var spirit_next: int = cfg.get_value("coin_shower", "spirit_next_time", now + int(SPIRIT_INTERVAL))
-	coin_shower_ready   = cfg.get_value("coin_shower", "coin_ready",   false)
-	spirit_shower_ready = cfg.get_value("coin_shower", "spirit_ready", false)
-
-	_coin_timer.stop()
-	_spirit_timer.stop()
-	_coin_window_timer.stop()
-	_spirit_window_timer.stop()
-
-	# Coin shower
-	if coin_shower_ready:
-		_coin_window_timer.start()
-	elif coin_next <= now:
-		coin_shower_ready = true
-		_coin_window_timer.start()
-	else:
-		_coin_timer.wait_time = float(coin_next - now)
-		_coin_timer.start()
-
-	# Spirit shower (only if unlocked)
-	if is_spirit_shower_unlocked():
-		if spirit_shower_ready:
-			_spirit_window_timer.start()
-		elif spirit_next <= now:
-			spirit_shower_ready = true
-			_spirit_window_timer.start()
-		else:
-			_spirit_timer.wait_time = float(spirit_next - now)
-			_spirit_timer.start()
+	_coin_next_time         = cfg.get_value("coin_shower", "coin_next_time",    now + int(COIN_INTERVAL))
+	_spirit_next_time       = cfg.get_value("coin_shower", "spirit_next_time",  now + int(SPIRIT_INTERVAL))
+	_coin_window_end_time   = cfg.get_value("coin_shower", "coin_window_end",   0)
+	_spirit_window_end_time = cfg.get_value("coin_shower", "spirit_window_end", 0)
+	coin_shower_ready       = cfg.get_value("coin_shower", "coin_ready",  false)
+	spirit_shower_ready     = cfg.get_value("coin_shower", "spirit_ready", false)
+	# Spirit timer starten als unlocked maar nog geen timestamp ingesteld
+	if is_spirit_shower_unlocked() and _spirit_next_time == 0 and not spirit_shower_ready:
+		_spirit_next_time = now + int(SPIRIT_INTERVAL)

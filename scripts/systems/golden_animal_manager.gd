@@ -1,8 +1,8 @@
 extends Node
 
-const GOLDEN_DURATION  := 15.0
-const MIN_INTERVAL     := 5.0
-const MAX_INTERVAL     := 15.0
+const GOLDEN_DURATION  := 15.0  # 15sec
+const MIN_INTERVAL     := 30.0  # 30sec
+const MAX_INTERVAL     := 120.0 # 2min
 
 const RARITY_WEIGHTS   := {"common": 9, "rare": 3, "mystic": 1}
 const COIN_MULTIPLIERS := {"common": 50, "rare": 100, "mystic": 200}

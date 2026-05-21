@@ -13,3 +13,4 @@ extends Resource
 @export var rarity:               String = "common"
 @export var coin_bonus_percent:   float  = 0.0
 @export var golden_chance_bonus:  float  = 0.0
+@export var outline_width:        float  = 0.03

@@ -34,6 +34,7 @@ var _acc_btns:      Array[Button] = []
 var _hint_lbl:      Label  = null
 var _hint_tween:    Tween  = null
 var _tile_selected: bool   = false
+var _block_close:   bool   = false
 
 
 func _ready() -> void:
@@ -265,6 +266,8 @@ func show_panel(animal_id: String, context: String, col: int = -1, row: int = -1
 	if visible:
 		return
 	visible = true
+	_block_close = true
+	get_tree().create_timer(0.20).timeout.connect(func(): _block_close = false)
 	if _context == "placing":
 		mouse_filter             = MOUSE_FILTER_IGNORE
 		_backdrop.mouse_filter   = MOUSE_FILTER_PASS
@@ -280,7 +283,7 @@ func show_panel(animal_id: String, context: String, col: int = -1, row: int = -1
 
 
 func close() -> void:
-	if not visible:
+	if _block_close or not visible:
 		return
 	mouse_filter = MOUSE_FILTER_IGNORE
 	var t := create_tween().set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_CUBIC)

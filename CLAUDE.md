@@ -317,6 +317,46 @@ signal quests_updated()
 
 ---
 
+## Android / Mobile valkuilen — lees dit ALTIJD bij input-gerelateerde wijzigingen
+
+Dit project draait op Android. Input op mobile werkt fundamenteel anders dan op PC. Onderstaande regels zijn geleerd uit bugs die op PC niet zichtbaar waren maar op Android wel.
+
+### 1. Android double-events (per tap: 2 events)
+Android stuurt voor elke touch **zowel** `InputEventScreenTouch` **als** een gesimuleerde `InputEventMouseButton`. Dit geldt voor press én release. Gevolg: elke handler die op beide reageert, wordt **twee keer** aangeroepen.
+
+**Regels:**
+- Gebruik altijd `button_down` signaal op Button nodes, nooit `pressed` voor actions die side-effects hebben (opens panel, etc.). `button_down` vuurt op press; de gesimuleerde MouseButton release triggert geen `button_down`.
+- In `_unhandled_input` die ZOWEL `InputEventScreenTouch` als `InputEventMouseButton` afhandelt: voeg deduplicatie toe als dubbele uitvoering problemen geeft (flag, frame-teller of `OS.has_feature("mobile")` check).
+
+### 2. CanvasLayer + SubViewport input-lek (KRITIEK)
+Control nodes (Button, Panel, etc.) die in een **CanvasLayer binnen een SubViewport** zitten, accepteren events via `accept_event()` — maar dit **voorkomt NIET** dat `_unhandled_input` op een Node3D in diezelfde SubViewport de event ook ontvangt.
+
+**Concreet:** een `tap_btn.button_down` in PlacingUI (CanvasLayer z=2, binnen Farm3D SubViewport) vuurt netjes — én dezelfde `ScreenTouch`-events bereiken `farm.gd._unhandled_input`. PC heeft dit probleem niet.
+
+**Ontwerppatroon om hiermee om te gaan:**
+- Laat `_unhandled_input` nooit domweg reageren op "buiten grid = cancel". Controleer altijd of de tap op een UI-element terechtgekomen is.
+- Gebruik state-checks: `placing_ui.is_detail_open()` in `farm.gd._handle_tap()` — als UI-staat aangeeft dat de tap bedoeld was voor de UI, doe dan geen 3D-actie.
+- Voeg aan panels/overlays die "taps door laten" een methode toe die de parent-farm kan bevragen (`is_detail_open()`, `is_busy()`, etc.).
+
+### 3. Timer nodes pauzeren op Android
+`Timer` nodes met default `PROCESS_MODE_PAUSABLE` stoppen met tellen als Android de app suspendeert of de scene tree pauzeert. Voor timers die in de achtergrond door moeten lopen (idle-game timers, cooldowns):
+- **Gebruik `_process` + `Time.get_unix_time_from_system()`** (unix timestamps als `int`).
+- Sla timestamps op, niet verstreken tijd.
+- Zie `coin_shower_manager.gd` als referentie-implementatie.
+
+### 4. `call_deferred` is NIET betrouwbaar als input-debounce
+`call_deferred` wordt uitgevoerd aan het einde van de huidige idle-fase — dit kan **vóór** de gesimuleerde Android double-events worden verwerkt. Gebruik dit NIET om input-events te debounce-en of een "block" flag te resetten na een tap.
+
+**Gebruik in plaats daarvan:** `get_tree().create_timer(0.15).timeout.connect(...)` — 150–200 ms is altijd genoeg om alle Android double-events van één tap te laten passeren.
+
+### 5. Paneel-zichtbaarheid bij parent hide
+Als een panel (`_detail_panel`) een kind is van een container die dynamisch `visible = false` wordt (bijv. PlacingUI bij `_exit_placing_mode()`):
+- De `visible` property van het panel verandert NIET — de node is alleen effectief onzichtbaar.
+- Bij de volgende `parent.visible = true` verschijnt het panel meteen weer als zijn eigen `visible` nog `true` was.
+- **Fix:** gebruik `_notification(NOTIFICATION_VISIBILITY_CHANGED)` op de parent om kindpanels expliciet te resetten: `if not visible and _detail_panel: _detail_panel.visible = false`.
+
+---
+
 ## Code conventies
 - **Één script per scene**, zelfde naam: `Farm.tscn` → `farm.gd`
 - **Signalen** voor communicatie tussen nodes — geen directe `get_node` buiten parent-child
@@ -459,6 +499,8 @@ Verwijderd: `player_name`, `day`, `level` — niet meer gebruikt.
 | 2026-05-17 | farm.gd golden integratie: `_on_golden_animal_on_farm(farm_id)` luistert naar `golden_animal_spawned_on_farm`; `_check_apply_golden()` zoekt node via `_animal_at_tile` en roept `apply_visuals_to()` aan. Aangeroepen bij signal én na `_on_farm_changed()`. `_clear_farm()` roept `on_farm_leaving()` aan ipv `force_cleanup()`. |
 | 2026-05-17 | HUD golden bar multi-farm: `_golden_icon_label` dynamisch — toont "✦ golden animal" op actieve farm, "✦ golden · [Farm Name]" op andere farm. Bar tappable via `gui_input` → opent FarmOverview als golden op andere farm. `_on_farm_changed_hud()` updatet tekst bij farm wissel. Verbonden via `golden_animal_spawned_on_farm` ipv `golden_animal_spawned`. |
 | 2026-05-17 | FarmOverview golden badge: elke card heeft `badge_row` HBoxContainer (meta "badge_row"). `_on_golden_on_farm()` voegt gouden pill "✦ golden" toe; `_remove_golden_badges()` ruimt op bij collect/expire. Bij openen overlay: directe badge-check als `GoldenAnimalManager.is_active()` (niet wachten op signal). |
+| 2026-05-21 | Android bug fix — AnimalDetailPanel sluit direct na openen in PlacingUI: root oorzaak is CanvasLayer+SubViewport input-lek (zie Mobile valkuilen §2). ScreenTouch-events bereiken `farm.gd._unhandled_input` ook al verwerkt de Button ze. Release buiten grid → `_cancel_placing()` → `tab_changed("farm")` → `_exit_placing_mode()` → `placing_ui.visible=false` → panel verdwijnt als kind. Fix: `placing_ui.is_detail_open()` check in `farm.gd._handle_tap()` — als detail panel al open is (show_panel() vuurt vóór _handle_tap), sla `_cancel_placing()` over. Extra: `_notification(NOTIFICATION_VISIBILITY_CHANGED)` in placing_ui.gd reset `_detail_panel.visible=false` bij hide, zodat panel niet herrijst bij volgende PlacingUI open. |
+| 2026-05-21 | Coin shower Android fix: Timer nodes pauzeren op Android bij app-suspend. Omgebouwd naar `_process` + `Time.get_unix_time_from_system()` unix-timestamps in `coin_shower_manager.gd`. Zie Mobile valkuilen §3. |
 
 ---
 

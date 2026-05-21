@@ -94,7 +94,7 @@ func _handle_tap(screen_pos: Vector2) -> void:
 	var col      := int((world.x + 1.75) / 0.7)
 	var row      := int((world.z + 1.75) / 0.7)
 	if col < 0 or col >= 5 or row < 0 or row >= 5:
-		if _placing_mode:
+		if _placing_mode and not placing_ui.is_detail_open():
 			_cancel_placing()
 		return
 	EventBus.tile_tapped.emit(col, row, Vector3(
